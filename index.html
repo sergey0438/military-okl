@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>КНП ХОР "ОКЛ"</title>
+<style>
+:root{
+  --bg:#f0f4f8;--s:#ffffff;--s2:#f8fafc;--b:#e2e8f0;--b2:#f1f5f9;
+  --t:#1e293b;--t2:#64748b;--t3:#94a3b8;
+  --g:#16a34a;--gd:rgba(22,163,74,.12);
+  --r:#dc2626;--rd:rgba(220,38,38,.12);
+  --y:#d97706;--yd:rgba(217,119,6,.12);
+  --bl:#2563eb;--bld:rgba(37,99,235,.1);
+  --ac:#2563eb;--ac2:#1d4ed8;
+  --mono:'SF Mono','Roboto Mono','Courier New',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--t);min-height:100vh;font-size:14px}
+.hdr{background:var(--s);border-bottom:1px solid var(--b);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--t)}
+.logo-icon{width:34px;height:34px;background:var(--ac);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.logo-sub{font-size:11px;color:var(--t2);font-weight:400}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.role-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:var(--mono)}
+.role-admin{background:rgba(220,38,38,.1);color:var(--r);border:1px solid rgba(220,38,38,.2)}
+.role-doctor{background:var(--bld);color:var(--bl);border:1px solid rgba(37,99,235,.2)}
+.hdate{font-family:var(--mono);font-size:11px;color:var(--t2);background:var(--s2);padding:4px 10px;border-radius:6px;border:1px solid var(--b)}
+.logout-btn{padding:5px 12px;background:var(--s2);border:1px solid var(--b);border-radius:6px;color:var(--t2);cursor:pointer;font-family:var(--sans);font-size:12px}
+.logout-btn:hover{background:var(--b);color:var(--t)}
+.nav{background:var(--s);border-bottom:1px solid var(--b);padding:0 24px;display:flex;overflow-x:auto;box-shadow:var(--shadow)}
+.nb{padding:13px 16px;background:none;border:none;color:var(--t2);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.nb:hover{color:var(--t);background:var(--s2)}
+.nb.active{color:var(--ac);border-bottom-color:var(--ac);font-weight:600}
+.bdg{background:var(--bld);color:var(--ac);border-radius:20px;padding:1px 7px;font-size:11px;font-family:var(--mono)}
+.main{padding:24px;max-width:1480px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.sc{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0}
+.sc.g::after{background:var(--g)}.sc.r::after{background:var(--r)}
+.sc.b::after{background:var(--bl)}.sc.y::after{background:var(--y)}
+.sl{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600}
+.sv{font-size:30px;font-weight:700;font-family:var(--mono);line-height:1}
+.sc.g .sv{color:var(--g)}.sc.r .sv{color:var(--r)}.sc.b .sv{color:var(--bl)}.sc.y .sv{color:var(--y)}
+.tb{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:200px}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);width:14px;height:14px}
+.si{width:100%;background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 10px 8px 32px;color:var(--t);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;box-shadow:var(--shadow)}
+.si:focus{border-color:var(--ac)}.si::placeholder{color:var(--t3)}
+select,input[type=date]{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 10px;color:var(--t);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;box-shadow:var(--shadow)}
+select:focus,input[type=date]:focus{border-color:var(--ac)}
+.btn{padding:8px 14px;border-radius:8px;border:none;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;box-shadow:var(--shadow)}
+.bp{background:var(--ac);color:#fff}.bp:hover{background:var(--ac2)}
+.bg2{background:var(--s);border:1px solid var(--b);color:var(--t)}.bg2:hover{background:var(--s2)}
+.bsuc{background:var(--gd);border:1px solid rgba(22,163,74,.3);color:var(--g)}
+.bwarn{background:var(--yd);border:1px solid rgba(217,119,6,.3);color:var(--y)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.tw{background:var(--s);border:1px solid var(--b);border-radius:10px;overflow:hidden;overflow-x:auto;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;min-width:700px}
+thead tr{background:var(--s2)}
+th{padding:11px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--b);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--b2);font-size:13px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafbff}
+.tag-g{background:var(--gd);color:var(--g);border:1px solid rgba(22,163,74,.25);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+.tag-r{background:var(--rd);color:var(--r);border:1px solid rgba(220,38,38,.25);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+.tag-y{background:var(--yd);color:var(--y);border:1px solid rgba(217,119,6,.25);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.tag-b{background:var(--bld);color:var(--bl);border:1px solid rgba(37,99,235,.2);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.tag-x{background:var(--s2);color:var(--t2);border:1px solid var(--b);padding:2px 8px;border-radius:20px;font-size:11px}
+.dbtn{padding:4px 10px;background:var(--gd);border:1px solid rgba(22,163,74,.3);border-radius:6px;color:var(--g);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .15s}
+.dbtn:hover{background:rgba(22,163,74,.2)}
+.dlbl{font-size:11px;color:var(--t3);font-family:var(--mono)}
+.edit-btn{padding:3px 8px;background:var(--bld);border:1px solid rgba(37,99,235,.25);border-radius:5px;color:var(--bl);font-size:11px;cursor:pointer;font-family:var(--sans)}
+.edit-btn:hover{background:rgba(37,99,235,.15)}
+.mo{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.mo.open{display:flex}
+.md{background:var(--s);border:1px solid var(--b);border-radius:14px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;animation:su .2s ease;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.md.wide{max-width:900px}
+@keyframes su{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{padding:20px 24px 16px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:flex-start}
+.mt{font-size:16px;font-weight:700;color:var(--t)}.ms{font-size:12px;color:var(--t2);margin-top:2px}
+.mx{width:28px;height:28px;background:var(--s2);border:1px solid var(--b);border-radius:6px;color:var(--t2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mx:hover{background:var(--b);color:var(--t)}
+.mb{padding:20px 24px}.mf{padding:16px 24px;border-top:1px solid var(--b);display:flex;gap:10px;justify-content:flex-end}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fi{display:flex;flex-direction:column;gap:6px}.fi.s2{grid-column:span 2}
+.fl{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+input.f,select.f,textarea.f{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:9px 12px;color:var(--t);font-family:var(--sans);font-size:13px;outline:none;width:100%;transition:border-color .15s}
+input.f:focus,select.f:focus,textarea.f:focus{border-color:var(--ac);background:var(--s)}
+input.f::placeholder{color:var(--t3)}
+input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(--b2)}
+.di{background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:16px;margin-bottom:16px}
+.dr{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--b2)}
+.dr:last-child{border-bottom:none}.dr span:first-child{color:var(--t2)}
+.rt{width:100%;border-collapse:collapse}
+.rt th,.rt td{padding:9px 12px;border:1px solid var(--b);font-size:12px;text-align:center}
+.rt th{background:var(--s2);color:var(--t2);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.rt td:first-child{text-align:left;font-weight:500}
+.rt tbody tr:hover{background:#fafbff}
+.rt .tr-total{background:rgba(37,99,235,.06);font-weight:700}.rt .tr-total td{color:var(--bl)}
+.rt input.mini{background:var(--s2);border:1px solid var(--b);border-radius:4px;padding:3px 6px;color:var(--t);font-family:var(--mono);font-size:12px;width:65px;text-align:center;outline:none}
+.rt input.mini:focus{border-color:var(--ac)}
+.ops-table{width:100%;border-collapse:collapse;font-size:12px}
+.ops-table th,.ops-table td{border:1px solid var(--b);padding:8px 10px;text-align:center;vertical-align:middle}
+.ops-table th{background:var(--s2);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--t2)}
+.ops-table td:first-child{text-align:left;font-weight:500;min-width:160px}
+.ops-table input.ops-input{width:70px;background:var(--s2);border:1px solid var(--b);border-radius:4px;padding:4px 6px;color:var(--t);font-family:var(--mono);font-size:12px;text-align:center;outline:none}
+.ops-table input.ops-input:focus{border-color:var(--ac);background:var(--s)}
+.ops-table input.ops-input.wide{width:100px}
+.ops-group-header td{background:rgba(37,99,235,.05);font-weight:700;color:var(--bl);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.info-banner{background:var(--bld);border:1px solid rgba(37,99,235,.25);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--bl);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.warn-banner{background:var(--yd);border:1px solid rgba(217,119,6,.25);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--y);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.err-banner{background:var(--rd);border:1px solid rgba(220,38,38,.25);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--r);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.ok-banner{background:var(--gd);border:1px solid rgba(22,163,74,.25);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--g);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.sp{width:16px;height:16px;border:2px solid var(--b);border-top-color:var(--bl);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lr td{color:var(--t3);text-align:center;padding:40px}
+.ntf{position:fixed;bottom:24px;right:24px;background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px 18px;font-size:13px;z-index:2000;box-shadow:0 8px 30px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);max-width:360px}
+.ntf.show{transform:translateY(0);opacity:1}
+.ntf.ok{border-color:var(--g);color:var(--g)}.ntf.err{border-color:var(--r);color:var(--r)}
+/* SKELETON */
+.skeleton{background:linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:6px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-wrap{display:flex;flex-direction:column;gap:10px;padding:16px}
+.sk-row{height:42px}
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:32px;width:100%;max-width:380px;box-shadow:var(--shadow-md);text-align:center}
+.login-logo{width:56px;height:56px;background:var(--ac);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px}
+.login-title{font-size:20px;font-weight:700;color:var(--t);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--t2);margin-bottom:24px}
+.role-select{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.role-btn{padding:14px;border:2px solid var(--b);border-radius:10px;background:var(--s2);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--t);transition:all .15s;text-align:center}
+.role-btn:hover,.role-btn.selected{border-color:var(--ac);background:var(--bld);color:var(--bl)}
+.role-icon{font-size:24px;display:block;margin-bottom:6px}
+.pw-group{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;text-align:left}
+.pw-label{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.pw-input{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 12px;color:var(--t);font-family:var(--sans);font-size:14px;outline:none;width:100%;transition:border-color .15s}
+.pw-input:focus{border-color:var(--ac)}
+.pw-err{font-size:12px;color:var(--r);text-align:left;min-height:18px;margin-bottom:8px}
+.login-btn{width:100%;padding:11px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.login-btn:hover{background:var(--ac2)}
+.login-btn:disabled{opacity:.6;cursor:not-allowed}
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sg{grid-template-columns:repeat(2,1fr)}
+  .ops-table{font-size:11px}
+  .ops-table th,.ops-table td{padding:6px 7px}
+  .ops-table input.ops-input{width:55px}
+  .ops-table input.ops-input.wide{width:75px}
+  .md.wide{max-width:98vw}
+  .hdr-right .hdate{display:none}
+}
+@media(max-width:640px){
+  .main{padding:12px}
+  .hdr{padding:0 12px;height:52px}
+  .logo-sub{display:none}
+  .hdr-right .hdate{display:none}
+  .logout-btn{padding:4px 8px;font-size:11px}
+  .nav{padding:0 8px}
+  .nb{padding:10px 12px;font-size:12px}
+  .sg{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+  .sc{padding:12px}.sv{font-size:24px}.sl{font-size:10px}
+  .tb{flex-direction:column;align-items:stretch;gap:8px}
+  .sw{min-width:unset}
+  .tb select,.tb input[type=date]{width:100%}
+  .tb .btn{justify-content:center}
+  .tw{border-radius:8px}
+  table{min-width:560px}
+  th{padding:8px 10px;font-size:10px}
+  td{padding:8px 10px;font-size:12px}
+  .fg{grid-template-columns:1fr}
+  .fi.s2{grid-column:span 1}
+  .md{border-radius:14px 14px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:92vh;max-width:100%}
+  .md.wide{border-radius:14px 14px 0 0;max-width:100%;max-height:92vh}
+  .mf{flex-direction:column-reverse}
+  .mf .btn{width:100%;justify-content:center;padding:11px}
+  .mo{align-items:flex-end;padding:0}
+  .login-card{padding:24px 20px;margin:16px}
+  .role-btn{padding:12px 8px;font-size:12px}
+  #page-r>div:first-child,#page-ops>div:first-child{flex-direction:column;align-items:stretch}
+  #page-r>div:first-child>div:last-child,#page-ops>div:first-child>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #page-r>div:first-child>div:last-child input[type=date],#page-ops>div:first-child>div:last-child input[type=date]{grid-column:span 2}
+  .ops-table{font-size:10px}
+  .ops-table th,.ops-table td{padding:5px 6px}
+  .ops-table input.ops-input{width:45px;font-size:10px;padding:2px 4px}
+  .ops-table input.ops-input.wide{width:60px}
+  .ops-table td:first-child{min-width:90px;font-size:11px}
+  .rt th,.rt td{padding:7px 8px;font-size:11px}
+  .rt input.mini{width:50px}
+  .info-banner,.warn-banner,.err-banner,.ok-banner{font-size:12px;padding:10px 12px}
+}
+@media(max-width:380px){
+  .sv{font-size:20px}
+  .role-select{grid-template-columns:1fr}
+  .nb{padding:8px 10px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">🏥</div>
+    <div class="login-title">КНП ХОР «ОКЛ»</div>
+    <div class="login-sub">Облік військовослужбовців</div>
+    <div class="role-select">
+      <div class="role-btn" id="roleAdminBtn" onclick="selectRole('admin')">
+        <span class="role-icon">🔐</span>Адміністратор
+      </div>
+      <div class="role-btn" id="roleDoctorBtn" onclick="selectRole('doctor')">
+        <span class="role-icon">👨‍⚕️</span>Лікар
+      </div>
+    </div>
+    <div class="pw-group">
+      <label class="pw-label">Пароль</label>
+      <input class="pw-input" type="password" id="pwInput" placeholder="Введіть пароль" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="pw-err" id="pwErr"></div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Увійти</button>
+    <p style="font-size:11px;color:var(--t3);margin-top:12px">Перше завантаження може тривати 5-10 сек</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap" style="display:none">
+<header class="hdr">
+  <div class="logo">
+    <div class="logo-icon">🏥</div>
+    <div><div>КНП ХОР «ОКЛ»</div><div class="logo-sub">Облік військовослужбовців</div></div>
+  </div>
+  <div class="hdr-right">
+    <span id="roleBadge" class="role-badge"></span>
+    <span class="hdate" id="hdate"></span>
+    <button class="logout-btn" onclick="doLogout()">Вийти</button>
+  </div>
+</header>
+<nav class="nav">
+  <button class="nb active" onclick="nav('p')" id="tab-p">🏥 Пацієнти <span class="bdg" id="cnt">0</span></button>
+  <button class="nb" onclick="nav('ops')" id="tab-ops">⚕️ Операції</button>
+  <button class="nb admin-only" onclick="nav('r')" id="tab-r" style="display:none">📋 Звіт 08:00</button>
+  <button class="nb admin-only" onclick="nav('cfg')" id="tab-cfg" style="display:none">⚙️ Налаштування</button>
+</nav>
+<main class="main">
+
+<!-- ПАЦІЄНТИ -->
+<div class="page active" id="page-p">
+  <div class="sg">
+    <div class="sc b"><div class="sl">На лікуванні</div><div class="sv" id="sT">—</div></div>
+    <div class="sc g"><div class="sl">Ліжко-днів &lt;15</div><div class="sv" id="sL">—</div></div>
+    <div class="sc r"><div class="sl">Ліжко-днів &gt;15</div><div class="sv" id="sG">—</div></div>
+    <div class="sc y"><div class="sl">Виписано сьогодні</div><div class="sv" id="sD">—</div></div>
+  </div>
+  <div class="tb">
+    <div class="sw">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/></svg>
+      <input class="si" type="text" id="srch" placeholder="Пошук за ПІБ, відділенням, діагнозом..." oninput="ft()">
+    </div>
+    <select id="fD" onchange="ft()"><option value="">Всі відділення</option></select>
+    <select id="fS" onchange="ft()">
+      <option value="">Всі</option><option value="a">На лікуванні</option><option value="d">Виписані</option>
+    </select>
+    <button class="btn bg2" onclick="load()">↻ Оновити</button>
+    <button class="btn bp" onclick="openAdd()">+ Додати</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th>#</th><th>ПІБ пацієнта</th><th>Відділення</th><th>Діагноз</th>
+        <th>Категорія</th><th>Дата госп.</th><th>Ліжко-дні</th><th>Стан</th><th>Евак.</th><th>Дії</th>
+      </tr></thead>
+      <tbody id="tb">
+        <tr><td colspan="10" style="padding:0">
+          <div class="sk-wrap">
+            <div class="skeleton sk-row"></div><div class="skeleton sk-row"></div>
+            <div class="skeleton sk-row"></div><div class="skeleton sk-row"></div>
+            <div class="skeleton sk-row"></div>
+          </div>
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ОПЕРАЦІЇ -->
+<div class="page" id="page-ops">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h2 style="font-size:18px;font-weight:700;color:var(--t)">⚕️ Операції за добу</h2>
+      <p style="color:var(--t2);font-size:13px;margin-top:3px" id="opsDateLbl"></p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input type="date" id="opsDate" onchange="renderOpsTable()">
+      <button class="btn bg2" onclick="renderOpsTable()">↻</button>
+      <button class="btn bp" onclick="saveOps()">💾 Зберегти</button>
+      <button class="btn bg2" onclick="exportOps()">⬇ CSV</button>
+    </div>
+  </div>
+  <div id="opsBanner"></div>
+  <div class="tw" style="overflow-x:auto">
+    <table class="ops-table">
+      <thead>
+        <tr>
+          <th rowspan="3" style="text-align:left;min-width:160px">Назва відділення</th>
+          <th rowspan="3">К-сть прооперованих, осіб</th>
+          <th rowspan="3">К-сть втручань, всього</th>
+          <th colspan="6">з них за ступенем тяжкості</th>
+        </tr>
+        <tr>
+          <th colspan="2">Без анестезії</th>
+          <th colspan="2">Складні</th>
+          <th colspan="2">Менш складні (001-941)</th>
+        </tr>
+        <tr>
+          <th>к-сть</th><th>код</th>
+          <th>к-сть</th><th>код</th>
+          <th>к-сть</th><th>код</th>
+        </tr>
+      </thead>
+      <tbody id="opsTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ЗВІТ 08:00 -->
+<div class="page" id="page-r">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h2 style="font-size:18px;font-weight:700">📋 Звіт на 08:00</h2>
+      <p style="color:var(--t2);font-size:13px;margin-top:3px" id="rdlbl"></p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input type="date" id="rdate" onchange="loadR(this.value);checkManualWindow()">
+      <button class="btn bg2" onclick="loadR()">↻</button>
+      <button class="btn bwarn" id="manualBtn" onclick="openManualInput()">✏️ Внести дані</button>
+      <button class="btn bp" onclick="exportR()">⬇ CSV</button>
+    </div>
+  </div>
+  <div id="rBanner"></div>
+  <div class="sg" id="rStats"></div>
+  <div class="tw" style="margin-bottom:20px">
+    <table class="rt">
+      <thead><tr>
+        <th style="text-align:left">Відділення</th>
+        <th>Всього</th><th>Лежачих</th><th>Сидячих</th>
+        <th>Виписка</th><th>На евак.</th><th>Вільних ліжок</th>
+        <th>&lt;15 днів</th><th>&gt;15 днів</th>
+      </tr></thead>
+      <tbody id="rtb"><tr class="lr"><td colspan="9"><span class="sp"></span></td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- НАЛАШТУВАННЯ -->
+<div class="page" id="page-cfg">
+  <h2 style="font-size:18px;font-weight:700;margin-bottom:20px">⚙️ Налаштування</h2>
+  <div style="background:var(--s);border:1px solid var(--b);border-radius:10px;padding:20px;max-width:600px;box-shadow:var(--shadow)">
+    <p style="font-size:13px;color:var(--t2);margin-bottom:16px;line-height:1.6">
+      Вставте URL вашого Apps Script Web App. Зберігається в браузері.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <label class="fl">URL Apps Script</label>
+      <input class="f" type="url" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:12px">
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn bp" onclick="saveApiUrl()">Зберегти</button>
+      <button class="btn bg2" onclick="testApi()">Перевірити зʼєднання</button>
+    </div>
+    <div id="apiStatus" style="margin-top:12px;font-size:13px;color:var(--t2)"></div>
+  </div>
+  <div style="background:var(--s);border:1px solid var(--b);border-radius:10px;padding:20px;max-width:600px;margin-top:16px;box-shadow:var(--shadow)">
+    <div style="font-size:14px;font-weight:600;margin-bottom:12px">🔑 Зміна паролів</div>
+    <p style="font-size:12px;color:var(--t3);line-height:1.6">Паролі зберігаються в коді <code>index.html</code>. Знайдіть рядок:<br>
+    <code style="background:var(--s2);padding:2px 6px;border-radius:4px">const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };</code><br>
+    і замініть на свої паролі.</p>
+  </div>
+</div>
+</main>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="addM">
+  <div class="md">
+    <div class="mh"><div><div class="mt">Новий пацієнт</div><div class="ms">Запишеться в Таблицю 2</div></div><button class="mx" onclick="cm('addM')">✕</button></div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fi s2"><label class="fl">ПІБ *</label><input class="f" type="text" id="fp" placeholder="Прізвище Ім'я По-батькові"></div>
+        <div class="fi"><label class="fl">Категорія</label><select class="f" id="fc"><option>ЗСУ</option><option>НГУ</option><option>СБУ</option><option>Поліція</option><option>ДСНС</option><option>ДПСУ</option></select></div>
+        <div class="fi"><label class="fl">Відділення *</label><input class="f" type="text" id="fd2" placeholder="Напр.: Нейрохірургія"></div>
+        <div class="fi"><label class="fl">Дата госпіталізації *</label><input class="f" type="date" id="fa"></div>
+        <div class="fi s2"><label class="fl">Діагноз</label><input class="f" type="text" id="fg2" placeholder="Основний діагноз"></div>
+        <div class="fi"><label class="fl">Тріаж</label><select class="f" id="fst"><option>Легкий</option><option>Середній</option><option>Важкий</option><option>Вкрай важкий</option></select></div>
+        <div class="fi"><label class="fl">Вид ураження</label><select class="f" id="fi2"><option>Поранений</option><option>Хворий</option><option>Травмований</option></select></div>
+        <div class="fi"><label class="fl">Евак. категорія</label><select class="f" id="fe"><option value="">— не визначено —</option><option>Сидячий</option><option>Лежачий</option></select></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg2" onclick="cm('addM')">Скасувати</button><button class="btn bp" onclick="addP()">Додати пацієнта</button></div>
+  </div>
+</div>
+
+<div class="mo" id="editM">
+  <div class="md">
+    <div class="mh"><div><div class="mt">Редагування пацієнта</div><div class="ms" id="editName"></div></div><button class="mx" onclick="cm('editM')">✕</button></div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fi s2">
+          <label class="fl">ПІБ пацієнта</label>
+          <input class="f" type="text" id="ep_pib" disabled>
+          <span style="font-size:11px;color:var(--t3)">ПІБ не можна редагувати</span>
+        </div>
+        <div class="fi"><label class="fl">Категорія</label><select class="f" id="ep_cat"><option>ЗСУ</option><option>НГУ</option><option>СБУ</option><option>Поліція</option><option>ДСНС</option><option>ДПСУ</option></select></div>
+        <div class="fi"><label class="fl">Відділення</label><input class="f" type="text" id="ep_dept"></div>
+        <div class="fi"><label class="fl">Дата госпіталізації</label><input class="f" type="date" id="ep_adm"></div>
+        <div class="fi s2"><label class="fl">Діагноз</label><input class="f" type="text" id="ep_diag"></div>
+        <div class="fi"><label class="fl">Тріаж</label><select class="f" id="ep_state"><option>Легкий</option><option>Середній</option><option>Важкий</option><option>Вкрай важкий</option></select></div>
+        <div class="fi"><label class="fl">Вид ураження</label><select class="f" id="ep_inj"><option>Поранений</option><option>Хворий</option><option>Травмований</option></select></div>
+        <div class="fi"><label class="fl">Евак. категорія</label><select class="f" id="ep_evac"><option value="">— не визначено —</option><option>Сидячий</option><option>Лежачий</option></select></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg2" onclick="cm('editM')">Скасувати</button><button class="btn bp" onclick="saveEdit()">💾 Зберегти зміни</button></div>
+  </div>
+</div>
+
+<div class="mo" id="disM">
+  <div class="md">
+    <div class="mh"><div><div class="mt">Виписка пацієнта</div><div class="ms" id="disN"></div></div><button class="mx" onclick="cm('disM')">✕</button></div>
+    <div class="mb">
+      <div class="di" id="disI"></div>
+      <div class="fi"><label class="fl">Дата виписки *</label><input class="f" type="date" id="disD"></div>
+    </div>
+    <div class="mf"><button class="btn bg2" onclick="cm('disM')">Скасувати</button><button class="btn bsuc" onclick="confDis()">✓ Підтвердити виписку</button></div>
+  </div>
+</div>
+
+<div class="mo" id="manualM">
+  <div class="md wide">
+    <div class="mh">
+      <div><div class="mt">✏️ Внести вільні ліжка</div><div class="ms" id="manualDate"></div></div>
+      <button class="mx" onclick="cm('manualM')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="info-banner">ℹ️ Введіть кількість вільних ліжок по кожному відділенню.</div>
+      <div class="tw">
+        <table class="rt">
+          <thead><tr>
+            <th style="text-align:left">Відділення</th>
+            <th>Всього (авто)</th><th>Виписка (авто)</th><th>На евак. (авто)</th>
+            <th>Вільних ліжок ✏️</th>
+          </tr></thead>
+          <tbody id="manualTb"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bg2" onclick="cm('manualM')">Скасувати</button>
+      <button class="btn bp" onclick="saveManual()">💾 Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<div class="ntf" id="ntf"></div>
+
+<script>
+// ══ НАЛАШТУВАННЯ ══
+// Вставте URL вашого Apps Script після деплою:
+const API_URL = localStorage.getItem('okl_api_url') || '';
+
+// Паролі (зберігаються локально, не видно в трафіку до Apps Script)
+const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
+// !! Змініть паролі вище !!
+
+let currentRole=null, all=[], rrows=[], disIdx=null, editRowIdx=null, manualDate='', opsData={};
+const OPS_DEPTS=['Нейрохірургія','Хірургія','Травматологія','ВХГШ','Ортопедичне','Серцево-судинна хірургія'];
+
+// LOGIN
+function selectRole(r){
+  document.getElementById('roleAdminBtn').classList.toggle('selected',r==='admin');
+  document.getElementById('roleDoctorBtn').classList.toggle('selected',r==='doctor');
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwErr').textContent='';
+  currentRole=r;
+  document.getElementById('pwInput').focus();
+}
+
+function doLogin(){
+  if(!currentRole){document.getElementById('pwErr').textContent='Оберіть роль';return;}
+  const pw=document.getElementById('pwInput').value;
+  if(!pw){document.getElementById('pwErr').textContent='Введіть пароль';return;}
+  if(!API_URL){document.getElementById('pwErr').textContent='API URL не налаштовано — перейдіть у Налаштування';return;}
+
+  if(pw!==PASSWORDS[currentRole]){
+    document.getElementById('pwErr').textContent='Невірний пароль';
+    document.getElementById('pwInput').select();return;
+  }
+
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  const isAdmin=currentRole==='admin';
+  document.getElementById('roleBadge').textContent=isAdmin?'🔐 Адміністратор':'👨‍⚕️ Лікар';
+  document.getElementById('roleBadge').className='role-badge '+(isAdmin?'role-admin':'role-doctor');
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
+  tick();
+  document.getElementById('rdate').value=iso();
+  document.getElementById('opsDate').value=iso();
+  load();
+  renderOpsTable();
+}
+
+function doLogout(){
+  currentRole=null;
+  if(window._autoRefresh){clearInterval(window._autoRefresh);window._autoRefresh=null;}
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwErr').textContent='';
+  document.getElementById('roleAdminBtn').classList.remove('selected');
+  document.getElementById('roleDoctorBtn').classList.remove('selected');
+  document.getElementById('loginBtn').textContent='Увійти';
+  document.getElementById('loginBtn').disabled=false;
+  // Показуємо збережений URL в налаштуваннях
+  const saved=localStorage.getItem('okl_api_url')||'';
+  const inp=document.getElementById('apiUrlInput');
+  if(inp)inp.value=saved;
+}
+
+// UTILS
+function tick(){
+  const f=()=>new Date().toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('hdate').textContent=f();
+  setInterval(()=>document.getElementById('hdate').textContent=f(),30000);
+}
+// JSONP — єдиний спосіб викликати Apps Script з GitHub Pages (обходить CORS)
+function apiCall(action, params={}){
+  return new Promise((resolve, reject) => {
+    if(!API_URL){ reject(new Error('API URL не налаштовано')); return; }
+    const cbName = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      const s = document.getElementById('__jsonp__');
+      if(s) s.remove();
+      reject(new Error('Timeout — перевірте URL та доступ у Apps Script'));
+    }, 20000);
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s = document.getElementById('__jsonp__');
+      if(s) s.remove();
+      if(data && data.error) reject(new Error(data.error));
+      else resolve(data);
+    };
+    const q = new URLSearchParams({...params, action, callback: cbName});
+    const s = document.createElement('script');
+    s.id = '__jsonp__';
+    s.src = API_URL + '?' + q;
+    s.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      reject(new Error('Не вдалося зʼєднатися — перевірте URL'));
+    };
+    document.head.appendChild(s);
+  });
+}
+// Обгортка для зручності (замість google.script.run)
+function gsr(fn, ...args){
+  // Конвертуємо назву функції в action
+  const actionMap = {
+    runGetPatients: ['getPatients', {}],
+    runGetReport:   ['getReport',   {date: args[0]||''}],
+  };
+  if(actionMap[fn]){
+    const [action, params] = actionMap[fn];
+    return apiCall(action, params);
+  }
+  // Для POST-подібних операцій — передаємо як GET параметри
+  const writeMap = {
+    runSetDischarge:  'setDischarge',
+    runAddPatient:    'addPatient',
+    runSaveReportData:'saveReport',
+    runSaveOps:       'saveOps',
+    runEditPatient:   'editPatient',
+  };
+  if(writeMap[fn]){
+    // Серіалізуємо аргументи
+    const paramNames = {
+      runSetDischarge:   ['rowIndex','dischargeDate'],
+      runAddPatient:     ['pib','dept','admDate','category','diagnosis','state','injType','evacCategory'],
+      runSaveReportData: ['date','deptDataJson'],
+      runSaveOps:        ['date','rowsJson'],
+      runEditPatient:    ['rowIndex','dept','admDate','category','diagnosis','state','injType','evacCategory'],
+    };
+    const names = paramNames[fn] || [];
+    const params = {};
+    names.forEach((name, i) => { params[name] = args[i] !== undefined ? String(args[i]) : ''; });
+    return apiCall(writeMap[fn], params);
+  }
+  return Promise.reject(new Error('Unknown function: ' + fn));
+}
+function nav(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.getElementById('tab-'+n).classList.add('active');
+  if(n==='r'&&currentRole==='admin')loadR();
+  if(n==='ops')renderOpsTable();
+  if(n==='cfg'){const inp=document.getElementById('apiUrlInput');if(inp)inp.value=localStorage.getItem('okl_api_url')||'';}
+}
+function bd(a,d){if(!a)return 0;return Math.max(0,Math.floor((new Date(d||new Date())-new Date(a))/86400000));}
+function fd(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return d;}}
+function iso(){return new Date().toISOString().slice(0,10);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function cm(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+let nt;
+function notify(msg,type){
+  const el=document.getElementById('ntf');
+  el.textContent=(type==='ok'?'✓ ':type==='err'?'✕ ':'ℹ ')+msg;
+  el.className='ntf show'+(type?' '+type:'');
+  clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),4000);
+}
+function skeletonRows(n){
+  return `<tr><td colspan="10" style="padding:0"><div class="sk-wrap">${Array(n).fill('<div class="skeleton sk-row"></div>').join('')}</div></td></tr>`;
+}
+
+// ПАЦІЄНТИ
+async function load(silent=false){
+  const tb=document.getElementById('tb');
+  if(!silent)tb.innerHTML=skeletonRows(5);
+  try{
+    const d=await gsr('runGetPatients');
+    all=d.patients||[];
+    render(all);stats(all);depts(all);
+    document.getElementById('cnt').textContent=all.filter(p=>!p.dischargeDate).length;
+    if(!window._autoRefresh){
+      window._autoRefresh=setInterval(()=>load(true),5*60*1000);
+    }
+  }catch(e){
+    tb.innerHTML=`<tr class="lr"><td colspan="10" style="color:var(--r)">⚠ ${e.message}</td></tr>`;
+  }
+}
+
+function render(pts){
+  const tb=document.getElementById('tb');
+  if(!pts.length){tb.innerHTML=`<tr class="lr"><td colspan="10">Пацієнтів не знайдено</td></tr>`;return;}
+  tb.innerHTML=pts.map((p,i)=>{
+    const days=bd(p.admDate,p.dischargeDate);
+    const lbl=p.bedDaysLabel||(days<15?'<15':'>15');
+    const bdg=p.dischargeDate?`<span class="tag-x" style="font-family:var(--mono)">${days}</span>`:lbl==='<15'?`<span class="tag-g">✓ ${days}д</span>`:`<span class="tag-r">⚠ ${days}д</span>`;
+    const sb=p.dischargeDate?`<span class="tag-x">Виписаний</span>`:`<span class="tag-b">На лікуванні</span>`;
+    const eb=p.evacCategory?`<span class="tag-y" style="font-size:10px">${esc(p.evacCategory)}</span>`:`<span style="color:var(--t3)">—</span>`;
+    let actions=p.dischargeDate?`<span class="dlbl">${fd(p.dischargeDate)}</span> `:`<button class="dbtn" onclick="openDis(event,${p.rowIndex},'${esc(p.pib)}','${p.admDate}',${days},'${lbl}')">Виписати</button> `;
+    actions+=`<button class="edit-btn" onclick="openEdit(event,${p.rowIndex})">✏️</button>`;
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--t3)">${i+1}</td>
+      <td><strong>${esc(p.pib)}</strong></td>
+      <td style="color:var(--t2)">${esc(p.dept)}</td>
+      <td style="color:var(--t2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p.diagnosis)}">${esc(p.diagnosis)}</td>
+      <td><span class="tag-x">${esc(p.category)}</span></td>
+      <td style="font-family:var(--mono);color:var(--t2)">${fd(p.admDate)}</td>
+      <td>${bdg}</td><td>${sb}</td><td>${eb}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+function stats(pts){
+  const a=pts.filter(p=>!p.dischargeDate),t=iso();
+  document.getElementById('sT').textContent=a.length;
+  document.getElementById('sL').textContent=a.filter(p=>bd(p.admDate)<15).length;
+  document.getElementById('sG').textContent=a.filter(p=>bd(p.admDate)>=15).length;
+  document.getElementById('sD').textContent=pts.filter(p=>p.dischargeDate?.slice(0,10)===t).length;
+}
+function depts(pts){
+  const dd=[...new Set(pts.map(p=>p.dept).filter(Boolean))].sort();
+  const s=document.getElementById('fD'),c=s.value;
+  s.innerHTML='<option value="">Всі відділення</option>'+dd.map(d=>`<option value="${esc(d)}"${d===c?' selected':''}>${esc(d)}</option>`).join('');
+}
+function ft(){
+  const s=document.getElementById('srch').value.toLowerCase();
+  const d=document.getElementById('fD').value;
+  const st=document.getElementById('fS').value;
+  render(all.filter(p=>{
+    const ms=!s||(p.pib||'').toLowerCase().includes(s)||(p.dept||'').toLowerCase().includes(s)||(p.diagnosis||'').toLowerCase().includes(s);
+    return ms&&(!d||p.dept===d)&&(!st||(st==='a'&&!p.dischargeDate)||(st==='d'&&!!p.dischargeDate));
+  }));
+}
+
+// ДОДАТИ
+function openAdd(){
+  ['fp','fd2','fg2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fa').value=iso();
+  document.getElementById('addM').classList.add('open');
+}
+async function addP(){
+  const pib=document.getElementById('fp').value.trim();
+  const dept=document.getElementById('fd2').value.trim();
+  const adm=document.getElementById('fa').value;
+  if(!pib||!dept||!adm){notify('Заповніть обовʼязкові поля','err');return;}
+  try{
+    await new Promise((res,rej)=>{
+      apiCall('addPatient',{pib,dept,admDate:adm,category:document.getElementById('fc').value,diagnosis:document.getElementById('fg2').value,state:document.getElementById('fst').value,injType:document.getElementById('fi2').value,evacCategory:document.getElementById('fe').value}).then(res).catch(rej);
+    });
+    cm('addM');notify('Пацієнта додано ✓','ok');load();
+  }catch(e){notify('Помилка: '+e.message,'err');}
+}
+
+// РЕДАГУВАННЯ
+function openEdit(ev,rowIdx){
+  ev.stopPropagation();
+  const p=all.find(x=>x.rowIndex===rowIdx);if(!p)return;
+  editRowIdx=rowIdx;
+  document.getElementById('editName').textContent=p.pib;
+  document.getElementById('ep_pib').value=p.pib;
+  document.getElementById('ep_dept').value=p.dept;
+  document.getElementById('ep_adm').value=p.admDate;
+  document.getElementById('ep_diag').value=p.diagnosis;
+  ['ep_cat','ep_state','ep_inj','ep_evac'].forEach(id=>{
+    const el=document.getElementById(id);
+    const val={ep_cat:p.category,ep_state:p.state,ep_inj:p.injType,ep_evac:p.evacCategory}[id];
+    for(let o of el.options)if(o.value===val||o.text===val){el.value=o.value;break;}
+  });
+  document.getElementById('editM').classList.add('open');
+}
+async function saveEdit(){
+  try{
+    await new Promise((res,rej)=>{
+      apiCall('editPatient',{rowIndex:editRowIdx,dept:document.getElementById('ep_dept').value,admDate:document.getElementById('ep_adm').value,category:document.getElementById('ep_cat').value,diagnosis:document.getElementById('ep_diag').value,state:document.getElementById('ep_state').value,injType:document.getElementById('ep_inj').value,evacCategory:document.getElementById('ep_evac').value}).then(res).catch(rej);
+    });
+    cm('editM');notify('Зміни збережено ✓','ok');load();
+  }catch(e){notify('Помилка: '+e.message,'err');}
+}
+
+// ВИПИСКА
+function openDis(ev,idx,pib,adm,days,lbl){
+  ev.stopPropagation();disIdx=idx;
+  document.getElementById('disN').textContent=pib;
+  document.getElementById('disI').innerHTML=`
+    <div class="dr"><span>ПІБ</span><span><strong>${esc(pib)}</strong></span></div>
+    <div class="dr"><span>Госпіталізація</span><span style="font-family:var(--mono)">${fd(adm)}</span></div>
+    <div class="dr"><span>Ліжко-днів</span><span>${lbl==='<15'?`<span class="tag-g">✓ ${days}д &lt;15</span>`:`<span class="tag-r">⚠ ${days}д &gt;15</span>`}</span></div>`;
+  document.getElementById('disD').value=iso();
+  document.getElementById('disM').classList.add('open');
+}
+async function confDis(){
+  const date=document.getElementById('disD').value;
+  if(!date){notify('Вкажіть дату виписки','err');return;}
+  try{
+    await new Promise((res,rej)=>{
+      apiCall('setDischarge',{rowIndex:disIdx,dischargeDate:date}).then(res).catch(rej);
+    });
+    cm('disM');notify('Виписку зафіксовано ✓','ok');load();
+  }catch(e){notify('Помилка: '+e.message,'err');}
+}
+
+// ОПЕРАЦІЇ
+function renderOpsTable(){
+  const date=document.getElementById('opsDate').value||iso();
+  document.getElementById('opsDateLbl').textContent='Дата: '+fd(date);
+  if(!opsData[date])opsData[date]={};
+  const tbody=document.getElementById('opsTbody');
+  tbody.innerHTML=OPS_DEPTS.map(dept=>{
+    const d=opsData[date][dept]||{};
+    const v=(k,w)=>`<input class="ops-input${w?' wide':''}" type="${w?'text':'number'}" min="0" data-dept="${esc(dept)}" data-key="${k}" data-date="${date}" value="${esc(String(d[k]||''))}" oninput="opsChange(this)">`;
+    return `<tr><td><strong>${esc(dept)}</strong></td><td>${v('persons')}</td><td>${v('total')}</td><td>${v('noAnQty')}</td><td>${v('noAnCode',true)}</td><td>${v('hardQty')}</td><td>${v('hardCode',true)}</td><td>${v('lightQty')}</td><td>${v('lightCode',true)}</td></tr>`;
+  }).join('');
+  tbody.innerHTML+=`<tr class="ops-group-header"><td>📊 Разом</td><td id="ops_sum_persons">—</td><td id="ops_sum_total">—</td><td id="ops_sum_noAn">—</td><td>—</td><td id="ops_sum_hard">—</td><td>—</td><td id="ops_sum_light">—</td><td>—</td></tr>`;
+  updateOpsSums(date);
+}
+function opsChange(el){
+  const{dept,key,date}=el.dataset;
+  if(!opsData[date])opsData[date]={};
+  if(!opsData[date][dept])opsData[date][dept]={};
+  opsData[date][dept][key]=el.value;
+  updateOpsSums(date);
+}
+function updateOpsSums(date){
+  const keys=['persons','total','noAnQty','hardQty','lightQty'],sums={};
+  keys.forEach(k=>sums[k]=0);
+  OPS_DEPTS.forEach(dept=>{const d=opsData[date]?.[dept]||{};keys.forEach(k=>sums[k]+=Number(d[k]||0));});
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v||'—';};
+  set('ops_sum_persons',sums.persons||'');set('ops_sum_total',sums.total||'');
+  set('ops_sum_noAn',sums.noAnQty||'');set('ops_sum_hard',sums.hardQty||'');set('ops_sum_light',sums.lightQty||'');
+}
+async function saveOps(){
+  const date=document.getElementById('opsDate').value||iso();
+  const rows=OPS_DEPTS.map(dept=>({dept,...(opsData[date]?.[dept]||{})}));
+  try{
+    await new Promise((res,rej)=>{
+      apiCall('saveOps',{date,rowsJson:JSON.stringify(rows)}).then(res).catch(rej);
+    });
+    notify('Операції збережено ✓','ok');
+  }catch(e){notify('Помилка: '+e.message,'err');}
+}
+function exportOps(){
+  const date=document.getElementById('opsDate').value||iso();
+  const h=['Відділення','Прооперованих осіб','Оперативних втручань','Без анестезії к-сть','Без анестезії код','Складних к-сть','Складних код','Менш складних к-сть','Менш складних код'];
+  const rows=[h,...OPS_DEPTS.map(dept=>{const d=opsData[date]?.[dept]||{};return[dept,d.persons||'',d.total||'',d.noAnQty||'',d.noAnCode||'',d.hardQty||'',d.hardCode||'',d.lightQty||'',d.lightCode||''];})];
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`операції_${date}.csv`;a.click();
+}
+
+// ЗВІТ
+async function loadR(dateStr){
+  const tb=document.getElementById('rtb');
+  tb.innerHTML=`<tr class="lr"><td colspan="9"><span class="sp"></span></td></tr>`;
+  const date=dateStr||document.getElementById('rdate').value||iso();
+  document.getElementById('rdlbl').textContent='Зріз на: '+fd(date);
+  try{
+    const d=await gsr('runGetReport',date);
+    rrows=d.rows||[];renderR(d);
+  }catch(e){
+    tb.innerHTML=`<tr class="lr"><td colspan="9" style="color:var(--r)">⚠ ${e.message}</td></tr>`;
+  }
+}
+function renderR(d){
+  const s=d.summary,date=document.getElementById('rdate').value||iso();
+  const now=new Date(),hour=now.getHours(),isToday=date===iso();
+  const banner=document.getElementById('rBanner');
+  if(!d.hasManual&&isToday&&hour<12)banner.innerHTML=`<div class="warn-banner">⚠️ Вільні ліжка не внесені. До 12:00 — ${11-hour} год.</div>`;
+  else if(!d.hasManual&&isToday&&hour>=12)banner.innerHTML=`<div class="err-banner">⛔ Вікно заповнення закрито (після 12:00).</div>`;
+  else if(d.hasManual)banner.innerHTML=`<div class="ok-banner">✓ Дані по вільних ліжках внесено.</div>`;
+  else banner.innerHTML='';
+  checkManualWindow();
+  document.getElementById('rStats').innerHTML=s?`
+    <div class="sc b"><div class="sl">Всього</div><div class="sv">${s.total??'—'}</div></div>
+    <div class="sc r"><div class="sl">Лежачих</div><div class="sv">${s.laying??'—'}</div></div>
+    <div class="sc g"><div class="sl">Сидячих</div><div class="sv">${s.sitting??'—'}</div></div>
+    <div class="sc y"><div class="sl">Виписка</div><div class="sv">${s.discharge??'—'}</div></div>
+    <div class="sc g"><div class="sl">&lt;15 днів</div><div class="sv">${s.lt15??'—'}</div></div>
+    <div class="sc r"><div class="sl">&gt;15 днів</div><div class="sv">${s.gt15??'—'}</div></div>`:'';
+  const tb=document.getElementById('rtb');
+  if(!d.rows?.length){tb.innerHTML=`<tr class="lr"><td colspan="9">Даних не знайдено</td></tr>`;return;}
+  const n=v=>(v===null||v===undefined||v==='')?'—':v;
+  let html=s?`<tr class="tr-total"><td>📊 Разом</td><td>${n(s.total)}</td><td>${n(s.laying)}</td><td>${n(s.sitting)}</td><td>${n(s.discharge)}</td><td>${n(s.evac)}</td><td>${n(s.freeBeds)||'—'}</td><td><span class="tag-g">${n(s.lt15)}</span></td><td><span class="tag-r">${n(s.gt15)}</span></td></tr>`:'';
+  html+=d.rows.map(r=>`<tr><td>${esc(r.dept)}</td><td><strong>${n(r.total)}</strong></td><td>${n(r.laying)}</td><td>${n(r.sitting)}</td><td>${n(r.discharge)}</td><td>${n(r.evac)}</td><td style="color:${r.freeBeds?'var(--t)':'var(--t3)'}">${n(r.freeBeds)}</td><td>${r.lt15>0?`<span class="tag-g">${r.lt15}</span>`:'—'}</td><td>${r.gt15>0?`<span class="tag-r">${r.gt15}</span>`:'—'}</td></tr>`).join('');
+  tb.innerHTML=html;
+}
+function checkManualWindow(){
+  const now=new Date(),hour=now.getHours(),btn=document.getElementById('manualBtn');
+  if(!btn)return;
+  const date=document.getElementById('rdate').value||iso();
+  const tomorrow=new Date(now);tomorrow.setDate(tomorrow.getDate()+1);
+  const canEdit=(date===iso()&&hour<12)||date===tomorrow.toISOString().slice(0,10);
+  btn.disabled=!canEdit;btn.style.opacity=canEdit?'1':'0.4';btn.style.cursor=canEdit?'pointer':'not-allowed';
+}
+async function openManualInput(){
+  const date=document.getElementById('rdate').value||iso();
+  const now=new Date(),hour=now.getHours();
+  const tomorrow=new Date(now);tomorrow.setDate(tomorrow.getDate()+1);
+  const tomorrowStr=tomorrow.toISOString().slice(0,10);
+  if(date===iso()&&hour>=12){notify('⛔ Вікно закрито після 12:00','err');return;}
+  if(date!==iso()&&date!==tomorrowStr){notify('⛔ Доступно тільки сьогодні (до 12:00) та завтра','err');return;}
+  manualDate=date;
+  document.getElementById('manualDate').textContent='Дата: '+fd(date);
+  const tb=document.getElementById('manualTb');
+  tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:20px"><span class="sp"></span></td></tr>`;
+  document.getElementById('manualM').classList.add('open');
+  try{
+    const d=await gsr('runGetReport',date);
+    const rows=d.rows||[];
+    if(!rows.length){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">Немає пацієнтів</td></tr>`;return;}
+    tb.innerHTML=rows.map(r=>`<tr><td>${esc(r.dept)}</td><td>${r.total??0}</td><td>${r.discharge??0}</td><td>${r.evac??0}</td><td><input class="mini" type="number" min="0" id="fb_${esc(r.dept)}" value="${r.freeBeds||''}"></td></tr>`).join('');
+    window._manualRows=rows;
+  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="color:var(--r);text-align:center;padding:20px">⚠ ${e.message}</td></tr>`;}
+}
+async function saveManual(){
+  if(!window._manualRows)return;
+  const deptData=window._manualRows.map(r=>({dept:r.dept,total:r.total||0,laying:r.laying||0,sitting:r.sitting||0,discharge:r.discharge||0,evac:r.evac||0,freeBeds:Number(document.getElementById('fb_'+esc(r.dept))?.value||0)}));
+  try{
+    await new Promise((res,rej)=>{
+      apiCall('saveReport',{date:manualDate,deptDataJson:JSON.stringify(deptData)}).then(res).catch(rej);
+    });
+    cm('manualM');notify('Дані збережено ✓','ok');loadR(manualDate);
+  }catch(e){notify('Помилка: '+e.message,'err');}
+}
+function saveApiUrl(){
+  const url=document.getElementById('apiUrlInput').value.trim();
+  if(!url){document.getElementById('apiStatus').textContent='Введіть URL';return;}
+  localStorage.setItem('okl_api_url',url);
+  // Оновлюємо глобальну змінну
+  Object.defineProperty(window,'API_URL',{value:url,writable:true,configurable:true});
+  window.API_URL=url;
+  document.getElementById('apiStatus').style.color='var(--g)';
+  document.getElementById('apiStatus').textContent='✓ Збережено';
+}
+async function testApi(){
+  const url=document.getElementById('apiUrlInput').value.trim()||API_URL;
+  if(!url){document.getElementById('apiStatus').textContent='Введіть URL';return;}
+  document.getElementById('apiStatus').textContent='Перевірка...';
+  try{
+    const d=await new Promise((resolve,reject)=>{
+      const cbName='test_'+Date.now();
+      const t=setTimeout(()=>{delete window[cbName];reject(new Error('Timeout'));},10000);
+      window[cbName]=(data)=>{clearTimeout(t);delete window[cbName];resolve(data);};
+      const s=document.createElement('script');
+      s.src=url+'?action=ping&callback='+cbName;
+      s.onerror=()=>{clearTimeout(t);delete window[cbName];reject(new Error('Помилка зʼєднання'));};
+      document.head.appendChild(s);
+    });
+    document.getElementById('apiStatus').style.color='var(--g)';
+    document.getElementById('apiStatus').textContent='✓ Підключено! Дата сервера: '+(d.date||'ok');
+  }catch(e){
+    document.getElementById('apiStatus').style.color='var(--r)';
+    document.getElementById('apiStatus').textContent='✕ '+e.message;
+  }
+}
+function exportR(){
+  const h=['Відділення','Всього','Лежачих','Сидячих','Виписка','На евак.','Вільних ліжок','<15','>15'];
+  const rows=[h,...rrows.map(r=>[r.dept,r.total,r.laying,r.sitting,r.discharge,r.evac,r.freeBeds,r.lt15,r.gt15])];
+  const csv=rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='звіт_'+(document.getElementById('rdate').value||iso())+'.csv';a.click();
+}
+</script>
+</body>
+</html>
