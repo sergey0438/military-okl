@@ -468,13 +468,22 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ НАЛАШТУВАННЯ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbyPqRpVUyjPZpat-TFGvbWm67yOCekqOuw4uAzdDrrelFQgwbF2P7APSifCMGgiUqNMjg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxQkafrl9zgfHCuorX2JJXDL18mzYBTLGVJrnsY3z2A4bQDIOv6A7NyRwT-HeKFqZv3mA/exec';
+const DEV_PASSWORD = 'dev2024okl'; // ← пароль розробника для налаштувань
 
 // Паролі (зберігаються локально, не видно в трафіку до Apps Script)
 const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
 // !! Змініть паролі вище !!
 
-let currentRole=null, all=[], rrows=[], disIdx=null, editRowIdx=null, manualDate='', opsData={};
+let currentRole=null, all=[], rrows=[], disIdx=null, editRowIdx=null, manualDate='';
+// Операції — зберігаємо локально щоб не губились
+function loadOpsData() {
+  try { return JSON.parse(localStorage.getItem('okl_ops')||'{}'); } catch { return {}; }
+}
+function saveOpsData(data) {
+  try { localStorage.setItem('okl_ops', JSON.stringify(data)); } catch {}
+}
+let opsData = loadOpsData();
 const OPS_DEPTS=['Нейрохірургія','Хірургія','Травматологія','ВХГШ','Ортопедичне','Серцево-судинна хірургія'];
 
 // LOGIN
@@ -499,17 +508,8 @@ function doLogin(){
     document.getElementById('pwInput').select();return;
   }
 
-  document.getElementById('loginWrap').style.display='none';
-  document.getElementById('appWrap').style.display='block';
-  const isAdmin=currentRole==='admin';
-  document.getElementById('roleBadge').textContent=isAdmin?'🔐 Адміністратор':'👨‍⚕️ Лікар';
-  document.getElementById('roleBadge').className='role-badge '+(isAdmin?'role-admin':'role-doctor');
-  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
-  tick();
-  document.getElementById('rdate').value=iso();
-  document.getElementById('opsDate').value=iso();
-  load();
-  renderOpsTable();
+  sessionStorage.setItem('okl_role', currentRole); // зберігаємо сесію
+  showApp(currentRole);
 }
 
 function doLogout(){
@@ -527,6 +527,29 @@ function doLogout(){
   const saved=localStorage.getItem('okl_api_url')||'';
   const inp=document.getElementById('apiUrlInput');
   if(inp)inp.value=saved;
+}
+
+// ── Відновлення сесії після перезавантаження ──
+document.addEventListener('DOMContentLoaded', () => {
+  const savedRole = sessionStorage.getItem('okl_role');
+  if (savedRole) {
+    currentRole = savedRole;
+    showApp(savedRole);
+  }
+});
+
+function showApp(role) {
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  const isAdmin = role==='admin';
+  document.getElementById('roleBadge').textContent=isAdmin?'🔐 Адміністратор':'👨‍⚕️ Лікар';
+  document.getElementById('roleBadge').className='role-badge '+(isAdmin?'role-admin':'role-doctor');
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
+  tick();
+  document.getElementById('rdate').value=iso();
+  document.getElementById('opsDate').value=iso();
+  load();
+  renderOpsTable();
 }
 
 // UTILS
@@ -608,7 +631,13 @@ function nav(n){
   document.getElementById('tab-'+n).classList.add('active');
   if(n==='r'&&currentRole==='admin')loadR();
   if(n==='ops')renderOpsTable();
-  if(n==='cfg'){const inp=document.getElementById('apiUrlInput');if(inp)inp.value=localStorage.getItem('okl_api_url')||'';}
+  if(n==='cfg'){
+    // Скидаємо замок кожного разу при вході
+    document.getElementById('cfgLock').style.display='block';
+    document.getElementById('cfgContent').style.display='none';
+    document.getElementById('cfgPwInput').value='';
+    document.getElementById('cfgPwErr').textContent='';
+  }
 }
 function bd(a,d){if(!a)return 0;return Math.max(0,Math.floor((new Date(d||new Date())-new Date(a))/86400000));}
 function fd(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return d;}}
@@ -758,10 +787,28 @@ async function confDis(){
 }
 
 // ОПЕРАЦІЇ
-function renderOpsTable(){
+async function renderOpsTable(){
   const date=document.getElementById('opsDate').value||iso();
   document.getElementById('opsDateLbl').textContent='Дата: '+fd(date);
-  if(!opsData[date])opsData[date]={};
+  if(!opsData[date]){
+    opsData[date]={};
+    // Завантажуємо з Google Sheets якщо є
+    try{
+      const d=await apiCall('getOps',{date});
+      if(d&&d.rows&&d.rows.length){
+        d.rows.forEach(r=>{
+          if(!opsData[date][r.dept])opsData[date][r.dept]={};
+          opsData[date][r.dept]={
+            persons:r.persons||'',total:r.total||'',
+            noAnQty:r.noAnQty||'',noAnCode:r.noAnCode||'',
+            hardQty:r.hardQty||'',hardCode:r.hardCode||'',
+            lightQty:r.lightQty||'',lightCode:r.lightCode||''
+          };
+        });
+        saveOpsData(opsData);
+      }
+    }catch(e){} // якщо немає даних — не страшно
+  }
   const tbody=document.getElementById('opsTbody');
   tbody.innerHTML=OPS_DEPTS.map(dept=>{
     const d=opsData[date][dept]||{};
@@ -776,6 +823,7 @@ function opsChange(el){
   if(!opsData[date])opsData[date]={};
   if(!opsData[date][dept])opsData[date][dept]={};
   opsData[date][dept][key]=el.value;
+  saveOpsData(opsData); // зберігаємо одразу
   updateOpsSums(date);
 }
 function updateOpsSums(date){
@@ -793,6 +841,7 @@ async function saveOps(){
     await new Promise((res,rej)=>{
       apiCall('saveOps',{date,rowsJson:JSON.stringify(rows)}).then(res).catch(rej);
     });
+    saveOpsData(opsData); // синхронізуємо
     notify('Операції збережено ✓','ok');
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
@@ -882,6 +931,16 @@ async function saveManual(){
 }
 function saveApiUrl(){
   notify('URL вшитий в код. Щоб змінити — відредагуйте рядок API_URL в index.html','');
+}
+function unlockCfg(){
+  const pw=document.getElementById('cfgPwInput').value;
+  if(pw!==DEV_PASSWORD){
+    document.getElementById('cfgPwErr').textContent='Невірний пароль';
+    return;
+  }
+  document.getElementById('cfgLock').style.display='none';
+  document.getElementById('cfgContent').style.display='block';
+  document.getElementById('currentApiUrl').textContent=API_URL;
 }
 async function testApi(){
   const url=document.getElementById('apiUrlInput').value.trim()||API_URL;
