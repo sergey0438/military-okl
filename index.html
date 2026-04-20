@@ -468,8 +468,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ НАЛАШТУВАННЯ ══
-// Вставте URL вашого Apps Script після деплою:
-const API_URL = localStorage.getItem('okl_api_url') || '';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxQkafrl9zgfHCuorX2JJXDL18mzYBTLGVJrnsY3z2A4bQDIOv6A7NyRwT-HeKFqZv3mA/exec';
 
 // Паролі (зберігаються локально, не видно в трафіку до Apps Script)
 const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
@@ -492,7 +491,8 @@ function doLogin(){
   if(!currentRole){document.getElementById('pwErr').textContent='Оберіть роль';return;}
   const pw=document.getElementById('pwInput').value;
   if(!pw){document.getElementById('pwErr').textContent='Введіть пароль';return;}
-  if(!API_URL){document.getElementById('pwErr').textContent='API URL не налаштовано — перейдіть у Налаштування';return;}
+
+
 
   if(pw!==PASSWORDS[currentRole]){
     document.getElementById('pwErr').textContent='Невірний пароль';
@@ -881,14 +881,7 @@ async function saveManual(){
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
 function saveApiUrl(){
-  const url=document.getElementById('apiUrlInput').value.trim();
-  if(!url){document.getElementById('apiStatus').textContent='Введіть URL';return;}
-  localStorage.setItem('okl_api_url',url);
-  // Оновлюємо глобальну змінну
-  Object.defineProperty(window,'API_URL',{value:url,writable:true,configurable:true});
-  window.API_URL=url;
-  document.getElementById('apiStatus').style.color='var(--g)';
-  document.getElementById('apiStatus').textContent='✓ Збережено';
+  notify('URL вшитий в код. Щоб змінити — відредагуйте рядок API_URL в index.html','');
 }
 async function testApi(){
   const url=document.getElementById('apiUrlInput').value.trim()||API_URL;
