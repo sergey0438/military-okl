@@ -244,7 +244,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   <button class="nb active" onclick="nav('p')" id="tab-p">🏥 Пацієнти <span class="bdg" id="cnt">0</span></button>
   <button class="nb" onclick="nav('ops')" id="tab-ops">⚕️ Операції</button>
   <button class="nb admin-only" onclick="nav('r')" id="tab-r" style="display:none">📋 Звіт 08:00</button>
-  <button class="nb admin-only" onclick="nav('cfg')" id="tab-cfg" style="display:none">⚙️ Налаштування</button>
+  <button class="nb admin-only" onclick="openCfg()" id="tab-cfg" style="display:none">⚙️ Налаштування</button>
 </nav>
 <main class="main">
 
@@ -464,11 +464,51 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   </div>
 </div>
 
+<!-- МОДАЛКА ПАРОЛЯ НАЛАШТУВАНЬ -->
+<div class="mo" id="cfgPwModal">
+  <div class="md" style="max-width:380px;text-align:center">
+    <div class="mh" style="justify-content:center;border:none;padding-bottom:8px">
+      <div>
+        <div style="font-size:36px;margin-bottom:8px">🔒</div>
+        <div class="mt">Захищена зона</div>
+        <div class="ms">Введіть пароль розробника</div>
+      </div>
+    </div>
+    <div class="mb" style="padding-top:8px">
+      <div class="fi">
+        <input class="f" type="password" id="cfgPwInput" placeholder="Пароль розробника" onkeydown="if(event.key==='Enter')unlockCfg()">
+      </div>
+      <div style="font-size:12px;color:var(--r);min-height:16px;margin-top:6px" id="cfgPwErr"></div>
+    </div>
+    <div class="mf" style="flex-direction:column;gap:8px">
+      <button class="btn bp" style="width:100%;justify-content:center" onclick="unlockCfg()">Увійти</button>
+      <button class="btn bg2" style="width:100%;justify-content:center" onclick="cm('cfgPwModal')">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА ВМІСТУ НАЛАШТУВАНЬ -->
+<div class="mo" id="cfgModal">
+  <div class="md" style="max-width:600px">
+    <div class="mh">
+      <div><div class="mt">⚙️ Налаштування</div><div class="ms">Захищений розділ</div></div>
+      <button class="mx" onclick="cm('cfgModal')">✕</button>
+    </div>
+    <div class="mb">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔗 URL Apps Script</div>
+      <div style="background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--t);word-break:break-all;margin-bottom:12px" id="currentApiUrl"></div>
+      <button class="btn bg2" onclick="testApi()">🔍 Перевірити з'єднання</button>
+      <div id="apiStatus" style="margin-top:12px;font-size:13px"></div>
+    </div>
+    <div class="mf"><button class="btn bp" onclick="cm('cfgModal')">Закрити</button></div>
+  </div>
+</div>
+
 <div class="ntf" id="ntf"></div>
 
 <script>
 // ══ НАЛАШТУВАННЯ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbwCPqgXgGBrE9BVIJulI6gXKYq_Zv-beV_L7jxEcklHghKvlwu40v9h6RXqcvBYx5LCcQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxQkafrl9zgfHCuorX2JJXDL18mzYBTLGVJrnsY3z2A4bQDIOv6A7NyRwT-HeKFqZv3mA/exec';
 const DEV_PASSWORD = 'dev2024okl'; // ← пароль розробника для налаштувань
 
 // Паролі (зберігаються локально, не видно в трафіку до Apps Script)
@@ -631,13 +671,7 @@ function nav(n){
   document.getElementById('tab-'+n).classList.add('active');
   if(n==='r'&&currentRole==='admin')loadR();
   if(n==='ops')renderOpsTable();
-  if(n==='cfg'){
-    // Скидаємо замок кожного разу при вході
-    document.getElementById('cfgLock').style.display='block';
-    document.getElementById('cfgContent').style.display='none';
-    document.getElementById('cfgPwInput').value='';
-    document.getElementById('cfgPwErr').textContent='';
-  }
+  // cfg handled by modal
 }
 function bd(a,d){if(!a)return 0;return Math.max(0,Math.floor((new Date(d||new Date())-new Date(a))/86400000));}
 function fd(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return d;}}
@@ -929,18 +963,28 @@ async function saveManual(){
     cm('manualM');notify('Дані збережено ✓','ok');loadR(manualDate);
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
-function saveApiUrl(){
-  notify('URL вшитий в код. Щоб змінити — відредагуйте рядок API_URL в index.html','');
+function saveApiUrl(){ /* URL вшитий в код */ }
+
+function openCfg(){
+  // Скидаємо стан і показуємо модалку з паролем
+  document.getElementById('cfgPwInput').value='';
+  document.getElementById('cfgPwErr').textContent='';
+  document.getElementById('cfgPwModal').classList.add('open');
+  setTimeout(()=>document.getElementById('cfgPwInput').focus(), 100);
 }
+
 function unlockCfg(){
   const pw=document.getElementById('cfgPwInput').value;
   if(pw!==DEV_PASSWORD){
     document.getElementById('cfgPwErr').textContent='Невірний пароль';
+    document.getElementById('cfgPwInput').select();
     return;
   }
-  document.getElementById('cfgLock').style.display='none';
-  document.getElementById('cfgContent').style.display='block';
+  // Пароль вірний — закриваємо модалку пароля, відкриваємо вміст
+  cm('cfgPwModal');
   document.getElementById('currentApiUrl').textContent=API_URL;
+  document.getElementById('apiStatus').textContent='';
+  document.getElementById('cfgModal').classList.add('open');
 }
 async function testApi(){
   const url=document.getElementById('apiUrlInput').value.trim()||API_URL;
