@@ -809,8 +809,9 @@ function render(pts){
     const bdg=p.dischargeDate?`<span class="tag-x" style="font-family:var(--mono)">${days}</span>`:lbl==='<15'?`<span class="tag-g">✓ ${days}д</span>`:`<span class="tag-r">⚠ ${days}д</span>`;
     const sb=p.dischargeDate?`<span class="tag-x">Виписаний</span>`:`<span class="tag-b">На лікуванні</span>`;
     const eb=p.evacCategory?`<span class="tag-y" style="font-size:10px">${esc(p.evacCategory)}</span>`:`<span style="color:var(--t3)">—</span>`;
-    let actions=p.dischargeDate?`<span class="dlbl">${fd(p.dischargeDate)}</span> `:`<button class="dbtn" onclick="openDis(event,${p.rowIndex},'${esc(p.pib)}','${p.admDate}',${days},'${lbl}')">Виписати</button> `;
-    actions+=`<button class="edit-btn" onclick="openEdit(event,${p.rowIndex})">✏️</button>`;
+    const sn=esc(p.sheetName||'');
+    let actions=p.dischargeDate?`<span class="dlbl">${fd(p.dischargeDate)}</span> `:`<button class="dbtn" onclick="openDis(event,${p.rowIndex},'${esc(p.pib)}','${p.admDate}',${days},'${lbl}','${sn}')">Виписати</button> `;
+    actions+=`<button class="edit-btn" onclick="openEdit(event,${p.rowIndex},'${sn}')">✏️</button>`;
     return `<tr>
       <td style="font-family:var(--mono);color:var(--t3)">${i+1}</td>
       <td><strong>${esc(p.pib)}</strong></td>
@@ -889,10 +890,10 @@ async function addP(){
 }
 
 // РЕДАГУВАННЯ
-function openEdit(ev,rowIdx){
+function openEdit(ev,rowIdx,sn){
   ev.stopPropagation();
   const p=all.find(x=>x.rowIndex===rowIdx);if(!p)return;
-  editRowIdx=rowIdx;
+  editRowIdx=rowIdx;window._editSN=sn||p.sheetName||'';
   document.getElementById('editName').textContent=p.pib;
   document.getElementById('ep_pib').value=p.pib;
   document.getElementById('ep_dept').value=p.dept;
@@ -908,15 +909,15 @@ function openEdit(ev,rowIdx){
 async function saveEdit(){
   try{
     await new Promise((res,rej)=>{
-      apiCall('editPatient',{rowIndex:editRowIdx,dept:document.getElementById('ep_dept').value,admDate:document.getElementById('ep_adm').value,category:document.getElementById('ep_cat').value,diagnosis:document.getElementById('ep_diag').value,state:document.getElementById('ep_state').value,injType:document.getElementById('ep_inj').value,evacCategory:document.getElementById('ep_evac').value}).then(res).catch(rej);
+      apiCall('editPatient',{rowIndex:editRowIdx,sheetName:window._editSN||'',dept:document.getElementById('ep_dept').value,admDate:document.getElementById('ep_adm').value,category:document.getElementById('ep_cat').value,diagnosis:document.getElementById('ep_diag').value,state:document.getElementById('ep_state').value,injType:document.getElementById('ep_inj').value,evacCategory:document.getElementById('ep_evac').value}).then(res).catch(rej);
     });
     cm('editM');notify('Зміни збережено ✓','ok');load();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
 
 // ВИПИСКА
-function openDis(ev,idx,pib,adm,days,lbl){
-  ev.stopPropagation();disIdx=idx;
+function openDis(ev,idx,pib,adm,days,lbl,sn){
+  ev.stopPropagation();disIdx=idx;window._disSN=sn||'';
   document.getElementById('disN').textContent=pib;
   document.getElementById('disI').innerHTML=`
     <div class="dr"><span>ПІБ</span><span><strong>${esc(pib)}</strong></span></div>
@@ -930,7 +931,7 @@ async function confDis(){
   if(!date){notify('Вкажіть дату виписки','err');return;}
   try{
     await new Promise((res,rej)=>{
-      apiCall('setDischarge',{rowIndex:disIdx,dischargeDate:date}).then(res).catch(rej);
+      apiCall('setDischarge',{rowIndex:disIdx,dischargeDate:date,sheetName:window._disSN||''}).then(res).catch(rej);
     });
     cm('disM');notify('Виписку зафіксовано ✓','ok');load();
   }catch(e){notify('Помилка: '+e.message,'err');}
