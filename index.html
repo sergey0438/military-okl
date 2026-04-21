@@ -596,7 +596,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ НАЛАШТУВАННЯ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbyEPzOSL2a3xymuy57TSKSYWhDI92n3Bowhheuvc8J43bTPlwxmjFK1ifBlViALVLwy7A/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxQkafrl9zgfHCuorX2JJXDL18mzYBTLGVJrnsY3z2A4bQDIOv6A7NyRwT-HeKFqZv3mA/exec';
 const DEV_PASSWORD = 'dev2024okl'; // ← пароль розробника для налаштувань
 
 // Паролі (зберігаються локально, не видно в трафіку до Apps Script)
@@ -877,13 +877,31 @@ function openAdd(){
   document.getElementById('addM').classList.add('open');
 }
 async function addP(){
-  const pib=document.getElementById('fp').value.trim();
-  const dept=document.getElementById('fd2').value.trim();
-  const adm=document.getElementById('fa').value;
-  if(!pib||!dept||!adm){notify('Заповніть обовʼязкові поля','err');return;}
+  const pib    = document.getElementById('fp').value.trim();
+  const dept   = document.getElementById('fd2').value;
+  const adm    = document.getElementById('fa').value;
+  const diag   = document.getElementById('fg2').value.trim();
+  const dateVal= document.getElementById('f_date').value;
+  const cat    = document.querySelector('#addM input[name="f_cat"]:checked')?.value||'';
+  const inj    = document.querySelector('#addM input[name="f_inj"]:checked')?.value||'';
+  const state  = document.querySelector('#addM input[name="f_state"]:checked')?.value||'';
+  const evac   = document.querySelector('#addM input[name="f_evac"]:checked')?.value||'';
+
+  if(!pib)  {notify('Введіть ПІБ пацієнта','err');return;}
+  if(!cat)  {notify('Оберіть категорію','err');return;}
+  if(!dept) {notify('Оберіть відділення','err');return;}
+  if(!inj)  {notify('Оберіть вид ураження','err');return;}
+  if(!state){notify('Оберіть стан','err');return;}
+  if(!adm)  {notify('Вкажіть дату госпіталізації','err');return;}
+
   try{
     await new Promise((res,rej)=>{
-      apiCall('addPatient',{pib,dept,admDate:adm,category:document.getElementById('fc').value,diagnosis:document.getElementById('fg2').value,state:document.getElementById('fst').value,injType:document.getElementById('fi2').value,evacCategory:document.getElementById('fe').value}).then(res).catch(rej);
+      apiCall('addPatient',{
+        pib, dept, admDate:adm,
+        category:cat, diagnosis:diag,
+        state, injType:inj, evacCategory:evac,
+        formDate:dateVal
+      }).then(res).catch(rej);
     });
     cm('addM');notify('Пацієнта додано ✓','ok');load();
   }catch(e){notify('Помилка: '+e.message,'err');}
