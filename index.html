@@ -335,10 +335,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   <div class="md">
     <div class="mh"><div><div class="mt">Новий пацієнт</div><div class="ms">Поля як у Google Формі</div></div><button class="mx" onclick="cm('addM')">✕</button></div>
     <div class="mb" style="display:flex;flex-direction:column;gap:18px">
-      <div class="fi">
-        <label class="fl">Дата *</label>
-        <select class="f" id="f_date"><option value="">Виберіть дату</option></select>
-      </div>
+
       <div class="fi">
         <label class="fl">ПІБ пацієнта *</label>
         <input class="f" type="text" id="fp" placeholder="Прізвище Ім'я По-батькові">
@@ -543,7 +540,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ КОНФІГ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbzQ8YBQJn0kED71bl20YJJG09IWat4RI0a5ozSvHqn90wuD64x3hvujg7JDqfymxehX_A/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxn1spIUS8BMxIhIXz_pHRNhOd4yRWtx_5GtfKa1qu817dkcSdZrRR6o97u0uxbNZJVJw/exec';
 const DEV_PASSWORD = 'dev2024okl';
 const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
 
@@ -808,17 +805,7 @@ function openAdd(){
   document.getElementById('fg2').value='';
   document.getElementById('fa').value=iso();
   document.querySelectorAll('#addM input[type=radio]').forEach(r=>r.checked=false);
-  const today=iso();
-  const tmrw=new Date(new Date().getTime()+3*60*60*1000);
-  tmrw.setDate(tmrw.getDate()+1);
-  const tmrwStr=tmrw.toISOString().slice(0,10);
-  const fmt=d=>{const[y,m,day]=d.split('-');return day+'.'+m+'.'+y;};
-  const sel=document.getElementById('f_date');
-  sel.innerHTML='<option value="">Виберіть дату</option>';
-  // Без обмеження часу — завжди доступні сьогодні і завтра
-  sel.innerHTML+=`<option value="${today}">${fmt(today)} (сьогодні)</option>`;
-  sel.innerHTML+=`<option value="${tmrwStr}">${fmt(tmrwStr)} (завтра)</option>`;
-  sel.value=today;
+
   document.getElementById('addM').classList.add('open');
 }
 
@@ -827,7 +814,6 @@ async function addP(){
   const dept=document.getElementById('fd2').value;
   const adm=document.getElementById('fa').value;
   const diag=document.getElementById('fg2').value.trim();
-  const dateVal=document.getElementById('f_date').value;
   const cat=document.querySelector('#addM input[name="f_cat"]:checked')?.value||'';
   const inj=document.querySelector('#addM input[name="f_inj"]:checked')?.value||'';
   const state=document.querySelector('#addM input[name="f_state"]:checked')?.value||'';
@@ -843,7 +829,7 @@ async function addP(){
   if(!adm){notify('Вкажіть дату госпіталізації','err');return;}
 
   try{
-    await apiCall('addPatient',{pib,dept,admDate:adm,category:cat,diagnosis:diag,state,injType:inj,evacCategory:evac,formDate:dateVal,svid,pol});
+    await apiCall('addPatient',{pib,dept,admDate:adm,category:cat,diagnosis:diag,state,injType:inj,evacCategory:evac,svid,pol});
     cm('addM');notify('Пацієнта додано ✓','ok');load();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
