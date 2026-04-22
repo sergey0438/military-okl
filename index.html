@@ -272,7 +272,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
       <option value="">Всі</option><option value="a">На лікуванні</option><option value="d">Виписані</option>
     </select>
     <button class="btn bg2" onclick="load()">↻ Оновити</button>
-    <button class="btn bp" onclick="openAdd()">+ Додати</button>
+    <button class="btn bp" onclick="openAdd()">+ Додати пацієнта</button>
   </div>
   <div class="tw">
     <table>
@@ -318,9 +318,9 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
           <th colspan="6">з них за ступенем тяжкості</th>
         </tr>
         <tr>
-          <th colspan="2">Без анестезії</th>
           <th colspan="2">Складні</th>
-          <th colspan="2">Менш складні (001-941)</th>
+           <th colspan="2">Менш складні (001-941)</th>
+          <th colspan="2">Без анестезії</th>
         </tr>
         <tr>
           <th>к-сть</th><th>код</th>
@@ -465,7 +465,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
       </div>
 
       <div class="fi">
-        <label class="fl">Стан *</label>
+        <label class="fl">Тріаж *</label>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
           <label class="radio-opt"><input type="radio" name="f_state" value="Легкий"> Легкий</label>
           <label class="radio-opt"><input type="radio" name="f_state" value="Середній"> Середній</label>
@@ -481,9 +481,24 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
       <div class="fi">
         <label class="fl">Евакуаційна категорія</label>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
-          <label class="radio-opt"><input type="radio" name="f_evac" value="" checked> — не визначено —</label>
           <label class="radio-opt"><input type="radio" name="f_evac" value="Сидячий"> Сидячий</label>
           <label class="radio-opt"><input type="radio" name="f_evac" value="Лежачий"> Лежачий</label>
+        </div>
+      </div>
+
+      <div class="fi">
+        <label class="fl">Оформлення свідоцтва про хворобу</label>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          <label class="radio-opt"><input type="radio" name="f_svid" value="Ні"> Ні</label>
+          <label class="radio-opt"><input type="radio" name="f_svid" value="Так"> Так</label>
+        </div>
+      </div>
+
+      <div class="fi">
+        <label class="fl">Звільнений з полону</label>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          <label class="radio-opt"><input type="radio" name="f_pol" value="Ні"> Ні</label>
+          <label class="radio-opt"><input type="radio" name="f_pol" value="Так"> Так</label>
         </div>
       </div>
 
@@ -508,7 +523,9 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
         <div class="fi s2"><label class="fl">Діагноз</label><input class="f" type="text" id="ep_diag"></div>
         <div class="fi"><label class="fl">Тріаж</label><select class="f" id="ep_state"><option>Легкий</option><option>Середній</option><option>Важкий</option><option>Вкрай важкий</option></select></div>
         <div class="fi"><label class="fl">Вид ураження</label><select class="f" id="ep_inj"><option>Поранений</option><option>Хворий</option><option>Травмований</option></select></div>
-        <div class="fi"><label class="fl">Евак. категорія</label><select class="f" id="ep_evac"><option value="">— не визначено —</option><option>Сидячий</option><option>Лежачий</option></select></div>
+        <div class="fi"><label class="fl">Евак. категорія</label><select class="f" id="ep_evac"><option>Сидячий</option><option>Лежачий</option></select></div>
+        <div class="fi"><label class="fl">Оформлення свідоцтва про хворобу</label><select class="f" id="ep_svid"><option>Ні</option><option>Так</option></select></div>
+        <div class="fi"><label class="fl">Звільнений з полону</label><select class="f" id="ep_pol"><option>Ні</option><option>Так</option></select></div>
       </div>
     </div>
     <div class="mf"><button class="btn bg2" onclick="cm('editM')">Скасувати</button><button class="btn bp" onclick="saveEdit()">💾 Зберегти зміни</button></div>
@@ -600,7 +617,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbzQ8YBQJn0kED71bl20YJJG
 const DEV_PASSWORD = 'dev2024okl'; // ← пароль розробника для налаштувань
 
 // Паролі (зберігаються локально, не видно в трафіку до Apps Script)
-const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
+const PASSWORDS = { admin: 'admin123', doctor: '' };
 // !! Змініть паролі вище !!
 
 let currentRole=null, all=[], rrows=[], disIdx=null, editRowIdx=null, manualDate='';
@@ -612,7 +629,7 @@ function saveOpsData(data) {
   try { localStorage.setItem('okl_ops', JSON.stringify(data)); } catch {}
 }
 let opsData = loadOpsData();
-const OPS_DEPTS=['Нейрохірургія','Хірургія','Травматологія','ВХГШ','Ортопедичне','Серцево-судинна хірургія'];
+const OPS_DEPTS=['ВНМД', 'Нейрохірургія','Хірургія','Травматологія','ВХГШ','Ортопедичне','Офтальмологія','Кардіологія','Сумісного перебування','Гінекологія','Серцево-судинна хірургія'];
 
 // LOGIN
 function selectRole(r){
