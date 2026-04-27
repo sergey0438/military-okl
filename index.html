@@ -949,7 +949,6 @@ function openEdit(ev,rowIdx,sn){
   document.getElementById('editM').classList.add('open');
 }
 async function saveEdit(){
-  if(currentRole==='admin'&&!await checkChangeCode()){return;}
   try{
     await apiCall('editPatient',{
       rowIndex:editRowIdx,sheetName:window._editSN||'',
@@ -979,7 +978,6 @@ function openDis(ev,idx,pib,adm,days,lbl,sn){
 async function confDis(){
   const date=document.getElementById('disD').value;
   if(!date){notify('Вкажіть дату виписки','err');return;}
-  if(currentRole==='admin'&&!await checkChangeCode()){return;}
   try{
     await apiCall('setDischarge',{rowIndex:disIdx,dischargeDate:date,sheetName:window._disSN||''});
     cm('disM');notify('Виписку зафіксовано ✓','ok');load();
@@ -1133,6 +1131,11 @@ function checkManualWindow(){
   btn.disabled=!canEdit;btn.style.opacity=canEdit?'1':'0.4';btn.style.cursor=canEdit?'pointer':'not-allowed';
 }
 async function openManualInput(){
+  // Адмін — перевірка коду перед внесенням даних
+  if(currentRole==='admin'){
+    const ok=await checkChangeCode();
+    if(!ok)return;
+  }
   const date=document.getElementById('rdate').value||iso();
   const now=new Date(),hour=now.getHours();
   const tmrw=new Date(now);tmrw.setDate(tmrw.getDate()+1);
