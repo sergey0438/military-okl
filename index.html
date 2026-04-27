@@ -220,6 +220,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   <button class="nb active" onclick="nav('p')" id="tab-p">🏥 Пацієнти <span class="bdg" id="cnt">0</span></button>
   <button class="nb" onclick="nav('ops')" id="tab-ops">⚕️ Операції</button>
   <button class="nb admin-only" onclick="nav('r')" id="tab-r" style="display:none">📋 Звіт 08:00</button>
+  <button class="nb doctor-only" onclick="nav('r')" id="tab-r-doc" style="display:none">📋 Звіт 08:00</button>
   <button class="nb admin-only" onclick="openCfg()" id="tab-cfg" style="display:none">⚙️ Налаштування</button>
 </nav>
 <main class="main">
@@ -230,8 +231,10 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
     <div class="sc g"><div class="sl">Ліжко-днів &lt;15</div><div class="sv" id="sL">—</div></div>
     <div class="sc r"><div class="sl">Ліжко-днів &gt;15</div><div class="sv" id="sG">—</div></div>
     <div class="sc y"><div class="sl">Виписано сьогодні</div><div class="sv" id="sD">—</div></div>
-    <div class="sc b"><div class="sl">Оформлено свідоцтв</div><div class="sv" id="sSvid">—</div></div>
+    <div class="sc b"><div class="sl">Свідоцтв</div><div class="sv" id="sSvid">—</div></div>
   </div>
+  <!-- Статистика по категоріях -->
+  <div id="catStats" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px"></div>
   <div class="tb">
     <div class="sw">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/></svg>
@@ -314,7 +317,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <input type="date" id="rdate" onchange="loadR(this.value);checkManualWindow()">
       <button class="btn bg2" onclick="loadR()">↻</button>
-      <button class="btn bwarn" id="manualBtn" onclick="openManualInput()">✏️ Внести дані</button>
+      <button class="btn bwarn admin-only" id="manualBtn" onclick="openManualInput()" style="display:none">✏️ Внести дані</button>
       <button class="btn bp" onclick="exportR()">⬇ CSV</button>
     </div>
   </div>
@@ -363,7 +366,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
         <label class="fl">Відділення *</label>
         <select class="f" id="fd2">
           <option value="">Виберіть відділення</option>
-          <option>ВЕНМД</option>
+          <option>ВНМД</option>
           <option>Хірургічне</option>
           <option>Неврологічне №1</option>
           <option>Неврологічне №2</option>
@@ -453,7 +456,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
         <div class="fi s2"><label class="fl">Відділення</label>
           <select class="f" id="ep_dept">
             <option value="">Виберіть відділення</option>
-            <option>ВЕНМД</option><option>Хірургічне</option>
+            <option>ВНМД</option><option>Хірургічне</option>
             <option>Неврологічне №1</option><option>Неврологічне №2</option>
             <option>Інсультне</option><option>Кардіологія</option>
             <option>Гастроентерологічне</option><option>Серцево-судинна хірургія</option>
@@ -519,6 +522,27 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   </div>
 </div>
 
+<!-- CHANGE CODE MODAL -->
+<div class="mo" id="changeCodeModal">
+  <div class="md" style="max-width:360px;text-align:center">
+    <div class="mh" style="justify-content:center;border:none;padding-bottom:8px">
+      <div>
+        <div style="font-size:32px;margin-bottom:8px">🔑</div>
+        <div class="mt">Підтвердження змін</div>
+        <div class="ms">Введіть код для внесення змін</div>
+      </div>
+    </div>
+    <div class="mb" style="padding-top:8px">
+      <input class="f" type="password" id="changeCodeInput" placeholder="Код підтвердження" onkeydown="if(event.key==='Enter')resolveChangeCode(true)">
+      <div style="font-size:12px;color:var(--r);min-height:16px;margin-top:6px" id="changeCodeErr"></div>
+    </div>
+    <div class="mf" style="flex-direction:column;gap:8px">
+      <button class="btn bp" style="width:100%;justify-content:center" onclick="resolveChangeCode(true)">Підтвердити</button>
+      <button class="btn bg2" style="width:100%;justify-content:center" onclick="resolveChangeCode(false)">Скасувати</button>
+    </div>
+  </div>
+</div>
+
 <!-- CFG PASSWORD MODAL -->
 <div class="mo" id="cfgPwModal">
   <div class="md" style="max-width:380px;text-align:center">
@@ -552,7 +576,8 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
     <div class="mb" style="display:flex;flex-direction:column;gap:20px">
 
       <div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔗 URL Apps Script</div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:16px;padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b)" id="lastLoginInfo">Останній вхід: —</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔗 URL Apps Script</div>
         <div style="background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--t);word-break:break-all;margin-bottom:10px" id="currentApiUrl"></div>
         <button class="btn bg2" onclick="testApi()">🔍 Перевірити з'єднання</button>
         <div id="apiStatus" style="margin-top:10px;font-size:13px"></div>
@@ -584,22 +609,33 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ КОНФІГ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbxVkuRPb4vUpwdTOuQYIyl_6Ra9WXiagcqhQbGMPcqcXJYkpdVTNqQegU2Q5i8rofLqsQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzQ8YBQJn0kED71bl20YJJG09IWat4RI0a5ozSvHqn90wuD64x3hvujg7JDqfymxehX_A/exec';
 const DEV_PASSWORD = 'dev2024okl';
 const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
+const CHANGE_CODE = '1234'; // ← код для внесення змін адміном
 
 // ══ ВІДДІЛЕННЯ ДЛЯ ОПЕРАЦІЙ ══
 // Редагуйте цей список щоб змінити відділення у вкладці Операції:
 const OPS_DEPTS = [
-  'ВЕНМД',
+  'ВНМД',
   'Хірургічне',
+  'Неврологічне №1',
+  'Неврологічне №2',
+  'Інсультне',
   'Кардіологія',
+  'Гастроентерологічне',
   'Серцево-судинна хірургія',
   'Ортопедія',
   'Нейрохірургія',
+  'Ревматологія',
   'Травматологія',
   'ВХГШ',
   'Офтальмологія',
+  'ПАВ',
+  'Ендокринологія',
+  'Реабілітація',
+  'Шкірно-венерологічне',
+  'Токсикологія',
   'Патології вагітності',
   'Сумісного перебування',
   'ВІТ дорослий',
@@ -608,7 +644,7 @@ const OPS_DEPTS = [
 
 // Всі відділення лікарні для звіту (повний список)
 const ALL_DEPTS = [
-  'ВЕНМД',
+  'ВНМД',
   'Хірургічне',
   'Неврологічне №1',
   'Неврологічне №2',
@@ -679,6 +715,8 @@ function doLogin(){
     document.getElementById('pwInput').select();return;
   }
   sessionStorage.setItem('okl_role','admin');
+  const now=new Date().toLocaleString('uk-UA');
+  localStorage.setItem('okl_last_login', now);
   showApp('admin');
 }
 
@@ -689,6 +727,7 @@ function showApp(role){
   document.getElementById('roleBadge').textContent=isAdmin?'🔐 Адміністратор':'👨‍⚕️ Лікар';
   document.getElementById('roleBadge').className='role-badge '+(isAdmin?'role-admin':'role-doctor');
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
+  document.querySelectorAll('.doctor-only').forEach(el=>el.style.display=(!isAdmin)?'':'none');
   tick();
   document.getElementById('rdate').value=iso();
   document.getElementById('opsDate').value=iso();
@@ -818,6 +857,18 @@ function stats(pts){
   document.getElementById('sG').textContent=a.filter(p=>bd(p.admDate)>=15).length;
   document.getElementById('sD').textContent=pts.filter(p=>p.dischargeDate?.slice(0,10)===t).length;
   document.getElementById('sSvid').textContent=a.filter(p=>p.svid==='Так').length;
+
+  // Підрахунок по категоріях
+  const cats={};
+  a.forEach(p=>{const c=p.category||'Інші';cats[c]=(cats[c]||0)+1;});
+  const catColors={'ЗСУ':'var(--bl)','НГУ':'var(--g)','СБУ':'var(--y)','ДСНС':'#e67e22','Поліція':'#9b59b6','ДПСУ':'#1abc9c','Інші':'var(--t3)'};
+  const catEl=document.getElementById('catStats');
+  catEl.innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,cnt])=>`
+    <div style="background:var(--s);border:1px solid var(--b);border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow)">
+      <span style="width:10px;height:10px;border-radius:50%;background:${catColors[cat]||'var(--t2)'};flex-shrink:0"></span>
+      <span style="font-size:13px;color:var(--t2)">${esc(cat)}</span>
+      <span style="font-size:16px;font-weight:700;font-family:var(--mono);color:${catColors[cat]||'var(--t)'}">${cnt}</span>
+    </div>`).join('');
 }
 function depts(pts){
   const dd=[...new Set(pts.map(p=>p.dept).filter(Boolean))].sort();
@@ -898,6 +949,7 @@ function openEdit(ev,rowIdx,sn){
   document.getElementById('editM').classList.add('open');
 }
 async function saveEdit(){
+  if(currentRole==='admin'&&!await checkChangeCode()){return;}
   try{
     await apiCall('editPatient',{
       rowIndex:editRowIdx,sheetName:window._editSN||'',
@@ -927,6 +979,7 @@ function openDis(ev,idx,pib,adm,days,lbl,sn){
 async function confDis(){
   const date=document.getElementById('disD').value;
   if(!date){notify('Вкажіть дату виписки','err');return;}
+  if(currentRole==='admin'&&!await checkChangeCode()){return;}
   try{
     await apiCall('setDischarge',{rowIndex:disIdx,dischargeDate:date,sheetName:window._disSN||''});
     cm('disM');notify('Виписку зафіксовано ✓','ok');load();
@@ -1038,8 +1091,9 @@ function renderR(d){
   const s=d.summary,date=document.getElementById('rdate').value||iso();
   const now=new Date(),hour=now.getHours(),isToday=date===iso();
   const banner=document.getElementById('rBanner');
-  if(!d.hasManual&&isToday&&hour<12)banner.innerHTML=`<div class="warn-banner">⚠️ Вільні ліжка не внесені. До 12:00 — ${11-hour} год.</div>`;
-  else if(!d.hasManual&&isToday&&hour>=12)banner.innerHTML=`<div class="err-banner">⛔ Вікно заповнення закрито (після 12:00).</div>`;
+  const limitHour=currentRole==='admin'?24:9; // адмін — без ліміту, лікар — до 09:00
+  if(!d.hasManual&&isToday&&hour<limitHour)banner.innerHTML=`<div class="warn-banner">⚠️ Вільні ліжка не внесені. До ${String(limitHour).padStart(2,'0')}:00 — ${limitHour-hour-1} год.</div>`;
+  else if(!d.hasManual&&isToday&&hour>=limitHour&&currentRole!=='admin')banner.innerHTML=`<div class="err-banner">⛔ Вікно заповнення закрито (після 09:00).</div>`;
   else if(d.hasManual)banner.innerHTML=`<div class="ok-banner">✓ Дані по вільних ліжках внесено.</div>`;
   else banner.innerHTML='';
   checkManualWindow();
@@ -1074,7 +1128,8 @@ function checkManualWindow(){
   if(!btn)return;
   const date=document.getElementById('rdate').value||iso();
   const tmrw=new Date(now);tmrw.setDate(tmrw.getDate()+1);
-  const canEdit=(date===iso()&&hour<12)||date===tmrw.toISOString().slice(0,10);
+  const editLimit=currentRole==='admin'?24:9;
+  const canEdit=currentRole==='admin'||(date===iso()&&hour<editLimit)||date===tmrw.toISOString().slice(0,10);
   btn.disabled=!canEdit;btn.style.opacity=canEdit?'1':'0.4';btn.style.cursor=canEdit?'pointer':'not-allowed';
 }
 async function openManualInput(){
@@ -1082,7 +1137,8 @@ async function openManualInput(){
   const now=new Date(),hour=now.getHours();
   const tmrw=new Date(now);tmrw.setDate(tmrw.getDate()+1);
   const tmrwStr=tmrw.toISOString().slice(0,10);
-  if(date===iso()&&hour>=12){notify('⛔ Вікно закрито після 12:00','err');return;}
+  const openLimit=currentRole==='admin'?24:9;
+  if(currentRole!=='admin'&&date===iso()&&hour>=openLimit){notify('⛔ Вікно закрито після 09:00 для лікаря','err');return;}
   if(date!==iso()&&date!==tmrwStr){notify('⛔ Доступно тільки сьогодні (до 12:00) та завтра','err');return;}
   manualDate=date;
   document.getElementById('manualDate').textContent='Дата: '+fd(date);
@@ -1115,6 +1171,34 @@ function exportR(){
 }
 
 // ══ НАЛАШТУВАННЯ ══
+// Перевірка коду зміни (для адміна)
+let _changeCodeResolve = null;
+function checkChangeCode(){
+  if(currentRole!=='admin') return Promise.resolve(true);
+  return new Promise(resolve=>{
+    _changeCodeResolve=resolve;
+    document.getElementById('changeCodeInput').value='';
+    document.getElementById('changeCodeErr').textContent='';
+    document.getElementById('changeCodeModal').classList.add('open');
+    setTimeout(()=>document.getElementById('changeCodeInput').focus(),100);
+  });
+}
+function resolveChangeCode(proceed){
+  if(!proceed){
+    document.getElementById('changeCodeModal').classList.remove('open');
+    if(_changeCodeResolve)_changeCodeResolve(false);
+    return;
+  }
+  const code=document.getElementById('changeCodeInput').value;
+  if(code!==CHANGE_CODE){
+    document.getElementById('changeCodeErr').textContent='Невірний код';
+    document.getElementById('changeCodeInput').select();
+    return;
+  }
+  document.getElementById('changeCodeModal').classList.remove('open');
+  if(_changeCodeResolve)_changeCodeResolve(true);
+}
+
 function openCfg(){
   document.getElementById('cfgPwInput').value='';
   document.getElementById('cfgPwErr').textContent='';
@@ -1127,6 +1211,9 @@ function unlockCfg(){
   cm('cfgPwModal');
   document.getElementById('currentApiUrl').textContent=API_URL;
   document.getElementById('apiStatus').textContent='';
+  const lastLogin=localStorage.getItem('okl_last_login')||'невідомо';
+  const lastLoginEl=document.getElementById('lastLoginInfo');
+  if(lastLoginEl)lastLoginEl.textContent='Останній вхід: '+lastLogin;
   document.getElementById('cfgModal').classList.add('open');
 }
 async function doBackup(){
