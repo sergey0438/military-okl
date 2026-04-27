@@ -610,7 +610,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ КОНФІГ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbx4hgdRgieuEEinI9ewV-EzY65Mvq4iAO4fcUOksnWT8w1mEaJsMUMjCplOSUi2WMd1ag/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycby7H3yxHGCthmq5hgFApP3JD_queb1nsPFy4M07bQurhoxDxKnd3cSLaRAjSde0qv9zxA/exec';
 const DEV_PASSWORD = 'dev2024okl';
 const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
 const CHANGE_CODE = '1234'; // ← код для внесення змін адміном
@@ -732,8 +732,8 @@ function showApp(role){
   tick();
   document.getElementById('rdate').value=iso();
   document.getElementById('opsDate').value=iso();
-  load();
-  loadOpsForDate();
+  load(); // завантажуємо пацієнтів одразу
+  // Операції — lazy, тільки при відкритті вкладки
 }
 
 function doLogout(){
@@ -765,8 +765,8 @@ function apiCall(action,params={}){
     const timeout=setTimeout(()=>{
       delete window[cbName];
       const s=document.getElementById('__jsonp__');if(s)s.remove();
-      reject(new Error('Timeout — перевірте URL та доступ у Apps Script'));
-    },20000);
+      reject(new Error('Timeout — сервер не відповів за 30 сек'));
+    },30000);
     window[cbName]=(data)=>{
       clearTimeout(timeout);delete window[cbName];
       const s=document.getElementById('__jsonp__');if(s)s.remove();
@@ -814,16 +814,49 @@ function skeletonRows(n){return`<tr><td colspan="12" style="padding:0"><div clas
 // ══ ПАЦІЄНТИ ══
 async function load(silent=false){
   const tb=document.getElementById('tb');
-  if(!silent)tb.innerHTML=skeletonRows(5);
-  try{
-    const d=await gsr('runGetPatients');
-    all=d.patients||[];
-    render(all);stats(all);depts(all);
-    document.getElementById('cnt').textContent=all.filter(p=>!p.dischargeDate).length;
-    if(!window._autoRefresh)window._autoRefresh=setInterval(()=>load(true),5*60*1000);
-  }catch(e){
-    tb.innerHTML=`<tr class="lr"><td colspan="12" style="color:var(--r)">⚠ ${e.message}</td></tr>`;
+
+  // Показуємо кешовані дані миттєво поки вантажимо нові
+  const cached=sessionStorage.getItem('okl_pts_cache');
+  const cachedTime=Number(sessionStorage.getItem('okl_pts_time')||0);
+  const cacheAge=(Date.now()-cachedTime)/1000;
+
+  if(cached && cacheAge < 60) {
+    // Кеш свіжий (<60 сек) — показуємо одразу без запиту
+    try {
+      all=JSON.parse(cached);
+      render(all);stats(all);depts(all);
+      document.getElementById('cnt').textContent=all.filter(p=>!p.dischargeDate).length;
+      if(!silent) document.getElementById('tb').style.opacity='0.7'; // показуємо що оновлюємо
+    } catch(e){}
+  } else if(!silent) {
+    tb.innerHTML=skeletonRows(5);
   }
+
+  // Завантажуємо з сервера (якщо кеш старий або force reload)
+  if(cacheAge > 30 || !cached) {
+    try{
+      const d=await gsr('runGetPatients');
+      all=d.patients||[];
+      sessionStorage.setItem('okl_pts_cache', JSON.stringify(all));
+      sessionStorage.setItem('okl_pts_time', Date.now());
+      render(all);stats(all);depts(all);
+      document.getElementById('cnt').textContent=all.filter(p=>!p.dischargeDate).length;
+      document.getElementById('tb').style.opacity='1';
+    }catch(e){
+      if(!cached) tb.innerHTML=`<tr class="lr"><td colspan="12" style="color:var(--r)">⚠ ${e.message}</td></tr>`;
+      else { render(all); document.getElementById('tb').style.opacity='1'; }
+    }
+  } else {
+    document.getElementById('tb').style.opacity='1';
+  }
+
+  if(!window._autoRefresh) window._autoRefresh=setInterval(()=>load(true),3*60*1000);
+}
+
+// Скидаємо кеш браузера після змін
+function invalidateBrowserCache(){
+  sessionStorage.removeItem('okl_pts_cache');
+  sessionStorage.removeItem('okl_pts_time');
 }
 
 function render(pts){
@@ -923,7 +956,7 @@ async function addP(){
 
   try{
     await apiCall('addPatient',{pib,dept,admDate:adm,category:cat,diagnosis:diag,state,injType:inj,evacCategory:evac,svid,pol});
-    cm('addM');notify('Пацієнта додано ✓','ok');load();
+    cm('addM');notify('Пацієнта додано ✓','ok');invalidateBrowserCache();load();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
 
@@ -979,7 +1012,7 @@ async function saveEdit(){
       svid:document.getElementById('ep_svid')?.value??'Ні',
       pol:document.getElementById('ep_pol')?.value??'Ні'
     });
-    cm('editM');notify('Зміни збережено ✓','ok');load();
+    cm('editM');notify('Зміни збережено ✓','ok');invalidateBrowserCache();load();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
 
@@ -999,7 +1032,7 @@ async function confDis(){
   if(!date){notify('Вкажіть дату виписки','err');return;}
   try{
     await apiCall('setDischarge',{rowIndex:disIdx,dischargeDate:date,sheetName:window._disSN||''});
-    cm('disM');notify('Виписку зафіксовано ✓','ok');load();
+    cm('disM');notify('Виписку зафіксовано ✓','ok');invalidateBrowserCache();load();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
 
