@@ -76,6 +76,9 @@ tbody tr:hover{background:#fafbff}
 .dlbl{font-size:11px;color:var(--t3);font-family:var(--mono)}
 .edit-btn{padding:3px 8px;background:var(--bld);border:1px solid rgba(37,99,235,.25);border-radius:5px;color:var(--bl);font-size:11px;cursor:pointer;font-family:var(--sans)}
 .edit-btn:hover{background:rgba(37,99,235,.15)}
+.diag-cell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:all .2s}
+.diag-cell:hover{color:var(--bl)}
+.diag-cell.expanded{white-space:normal;word-break:break-word;background:var(--bld);padding:4px 6px;border-radius:6px;color:var(--bl)}
 .del-btn{padding:3px 8px;background:var(--rd);border:1px solid rgba(220,38,38,.25);border-radius:5px;color:var(--r);font-size:11px;cursor:pointer;font-family:var(--sans)}
 .del-btn:hover{background:rgba(220,38,38,.2)}
 .mo{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -108,7 +111,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 .rt input.mini:focus{border-color:var(--ac)}
 .ops-table{width:100%;border-collapse:collapse;font-size:13px}
 .ops-table th,.ops-table td{border:1px solid var(--b);padding:8px 10px;text-align:center;vertical-align:middle}
-.ops-table th{background:var(--s2);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--t2)}
+.ops-table th{background:var(--s2);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:var(--t2);position:sticky;top:0;z-index:10;box-shadow:0 1px 0 var(--b)}
 .ops-table td:first-child{text-align:left;font-weight:500;min-width:160px}
 .ops-table input.ops-input{width:70px;background:var(--s2);border:1px solid var(--b);border-radius:4px;padding:4px 6px;color:var(--t);font-family:var(--mono);font-size:12px;text-align:center;outline:none}
 .ops-table input.ops-input:focus{border-color:var(--ac);background:var(--s)}
@@ -254,8 +257,11 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
     </select>
     <select id="fPol" onchange="ft()">
       <option value="">Всі категорії</option>
-      <option value="pol">З полону</option>
-      <option value="svid">Зі свідоцтвом</option>
+      <option value="inj_хворий">Хворий</option>
+      <option value="inj_травмований">Травмований</option>
+      <option value="inj_поранений">Поранений</option>
+      <option value="svid">Оформлення свідоцтва</option>
+      <option value="pol">Звільнений з полону</option>
     </select>
     <button class="btn bg2" onclick="load()">↻ Оновити</button>
     <button class="btn bg2 admin-only" onclick="checkDuplicates()" style="display:none">🔍 Дублі</button>
@@ -587,28 +593,6 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
       <div>
         <div style="font-size:12px;color:var(--t3);margin-bottom:16px;padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b)" id="lastLoginInfo">Останній вхід: —</div>
-      <!-- Логотип -->
-      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--t2)">🖼️ Логотип</div>
-      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap">
-        <div id="logoPreview" style="width:60px;height:60px;background:var(--ac);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden">
-          <img id="cfgLogoPreviewImg" src="" style="width:100%;height:100%;object-fit:cover;display:none" alt="">
-          <span id="cfgLogoPreviewEmoji">🏥</span>
-        </div>
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:12px;color:var(--t3);margin-bottom:8px">Вставте URL зображення або base64</div>
-          <input class="f" type="text" id="logoUrlInput" placeholder="https://... або data:image/png;base64,..." style="margin-bottom:8px">
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn bp" style="font-size:12px;padding:6px 12px" onclick="saveLogo()">Зберегти</button>
-            <label class="btn bg2" style="font-size:12px;padding:6px 12px;cursor:pointer">
-              📁 Завантажити файл
-              <input type="file" accept="image/*" style="display:none" onchange="uploadLogoFile(this)">
-            </label>
-            <button class="btn bg2" style="font-size:12px;padding:6px 12px" onclick="removeLogo()">✕ Скинути</button>
-          </div>
-        </div>
-      </div>
-      <div style="border-top:1px solid var(--b);margin-bottom:20px"></div>
-
       <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔗 URL Apps Script</div>
         <div style="background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--t);word-break:break-all;margin-bottom:10px" id="currentApiUrl"></div>
         <button class="btn bg2" onclick="testApi()">🔍 Перевірити з'єднання</button>
@@ -677,8 +661,14 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ КОНФІГ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbyvg3qzsus-eGk_lW4rD3S-yfcU7zB6YUSAXB2pmHoSSfmKHWrcvkb_LxCGCpVvagRH7w/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzQ8YBQJn0kED71bl20YJJG09IWat4RI0a5ozSvHqn90wuD64x3hvujg7JDqfymxehX_A/exec';
 const DEV_PASSWORD = 'dev2024okl';
+
+// ── ЛОГОТИП ──
+// Вставте URL або base64 зображення нижче (або залиште '' для стандартної іконки 🏥):
+const LOGO_SRC = 'https://github.com/sergey0438/military-okl/blob/main/IMG_3474%20(2).PNG';
+// Приклад: const LOGO_SRC = 'https://example.com/logo.png';
+// Або: const LOGO_SRC = 'data:image/png;base64,iVBORw0KGgo...';
 const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
 const CHANGE_CODE = '1234'; // ← код для внесення змін адміном
 
@@ -961,7 +951,9 @@ function render(pts){
       <td style="font-family:var(--mono);color:var(--t3)">${i+1}</td>
       <td><strong>${esc(p.pib)}</strong></td>
       <td style="color:var(--t2)">${esc(p.dept)}</td>
-      <td style="color:var(--t2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p.diagnosis)}">${esc(p.diagnosis)}</td>
+      <td style="color:var(--t2);max-width:160px" title="${esc(p.diagnosis)}">
+        <div class="diag-cell" onclick="this.classList.toggle('expanded')">${esc(p.diagnosis)||'—'}</div>
+      </td>
       <td><span class="tag-x">${esc(p.category)}</span></td>
       <td style="font-family:var(--mono);color:var(--t2)">${fd(p.admDate)}</td>
       <td>${bdg}</td><td>${sb}</td><td>${eb}</td>
@@ -992,9 +984,13 @@ function stats(pts){
     </div>`).join('');
 }
 function depts(pts){
-  const dd=[...new Set(pts.map(p=>p.dept).filter(Boolean))].sort();
+  // Показуємо всі відділення з ALL_DEPTS + ті що є в пацієнтах
+  const fromPts=new Set(pts.map(p=>p.dept).filter(Boolean));
+  const allD=typeof ALL_DEPTS!=='undefined'
+    ? [...new Set([...ALL_DEPTS,...fromPts])]
+    : [...fromPts].sort();
   const s=document.getElementById('fD'),c=s.value;
-  s.innerHTML='<option value="">Всі відділення</option>'+dd.map(d=>`<option value="${esc(d)}"${d===c?' selected':''}>${esc(d)}</option>`).join('');
+  s.innerHTML='<option value="">Всі відділення</option>'+allD.map(d=>`<option value="${esc(d)}"${d===c?' selected':''}>${esc(d)}</option>`).join('');
 }
 function ft(){
   const s=document.getElementById('srch').value.toLowerCase();
@@ -1004,7 +1000,12 @@ function ft(){
   render(all.filter(p=>{
     const ms=!s||(p.pib||'').toLowerCase().includes(s)||(p.dept||'').toLowerCase().includes(s)||(p.diagnosis||'').toLowerCase().includes(s);
     const stOk=!st||(st==='a'&&!p.dischargeDate)||(st==='d'&&!!p.dischargeDate);
-    const fpOk=!fp||(fp==='pol'&&p.pol==='Так')||(fp==='svid'&&p.svid==='Так');
+    const fpOk=!fp||
+    (fp==='pol'&&p.pol==='Так')||
+    (fp==='svid'&&p.svid==='Так')||
+    (fp==='inj_хворий'&&(p.injType||'').toLowerCase()==='хворий')||
+    (fp==='inj_травмований'&&(p.injType||'').toLowerCase()==='травмований')||
+    (fp==='inj_поранений'&&(p.injType||'').toLowerCase()==='поранений');
     return ms&&(!d||p.dept===d)&&stOk&&fpOk;
   }));
 }
@@ -1020,6 +1021,12 @@ function openAdd(){
 }
 
 async function addP(){
+  // Захист від подвійного кліку
+  const btn=document.querySelector('#addM .btn.bp');
+  if(btn && btn.disabled) return;
+  if(btn){ btn.disabled=true; btn.textContent='Збереження...'; }
+  const restore=()=>{ if(btn){ btn.disabled=false; btn.textContent='Додати пацієнта'; } };
+
   const pib=document.getElementById('fp').value.trim();
   const dept=document.getElementById('fd2').value;
   const adm=document.getElementById('fa').value;
@@ -1031,17 +1038,18 @@ async function addP(){
   const svid=document.querySelector('#addM input[name="f_svid"]:checked')?.value||'Ні';
   const pol=document.querySelector('#addM input[name="f_pol"]:checked')?.value||'Ні';
 
-  if(!pib){notify('Введіть ПІБ пацієнта','err');return;}
-  if(!cat){notify('Оберіть категорію','err');return;}
-  if(!dept){notify('Оберіть відділення','err');return;}
-  if(!inj){notify('Оберіть вид ураження','err');return;}
-  if(!state){notify('Оберіть стан','err');return;}
-  if(!adm){notify('Вкажіть дату госпіталізації','err');return;}
+  if(!pib){notify('Введіть ПІБ пацієнта','err');restore();return;}
+  if(!cat){notify('Оберіть категорію','err');restore();return;}
+  if(!dept){notify('Оберіть відділення','err');restore();return;}
+  if(!inj){notify('Оберіть вид ураження','err');restore();return;}
+  if(!state){notify('Оберіть стан','err');restore();return;}
+  if(!adm){notify('Вкажіть дату госпіталізації','err');restore();return;}
 
   try{
     await apiCall('addPatient',{pib,dept,admDate:adm,category:cat,diagnosis:diag,state,injType:inj,evacCategory:evac,svid,pol});
     cm('addM');notify('Пацієнта додано ✓','ok');invalidateBrowserCache();load();
-  }catch(e){notify('Помилка: '+e.message,'err');}
+    restore();
+  }catch(e){notify('Помилка: '+e.message,'err');restore();}
 }
 
 // ══ РЕДАГУВАННЯ ══
@@ -1479,8 +1487,7 @@ function uploadLogoFile(input) {
 
 // Завантажуємо логотип при старті
 document.addEventListener('DOMContentLoaded', () => {
-  const savedLogo = localStorage.getItem('okl_logo');
-  if (savedLogo) applyLogo(savedLogo);
+  if (LOGO_SRC) applyLogo(LOGO_SRC);
 });
 
 function openCfg(){
@@ -1495,15 +1502,7 @@ function unlockCfg(){
   cm('cfgPwModal');
   document.getElementById('currentApiUrl').textContent=API_URL;
   // Показуємо поточний логотип
-  const savedLogo = localStorage.getItem('okl_logo');
-  const logoInp = document.getElementById('logoUrlInput');
-  if (logoInp) logoInp.value = savedLogo ? (savedLogo.startsWith('data:') ? savedLogo.substring(0,50)+'...' : savedLogo) : '';
-  if (savedLogo) {
-    const pImg = document.getElementById('cfgLogoPreviewImg');
-    const pEmoji = document.getElementById('cfgLogoPreviewEmoji');
-    if (pImg) { pImg.src = savedLogo; pImg.style.display = 'block'; }
-    if (pEmoji) pEmoji.style.display = 'none';
-  }
+
   document.getElementById('apiStatus').textContent='';
   const lastLogin=localStorage.getItem('okl_last_login')||'невідомо';
   const lastLoginEl=document.getElementById('lastLoginInfo');
