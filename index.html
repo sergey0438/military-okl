@@ -189,7 +189,10 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <div id="loginWrap" class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">🏥</div>
+    <div class="login-logo" id="loginLogo">
+      <img id="loginLogoImg" src="" alt="🏥" style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:none">
+      <span id="loginLogoEmoji" style="font-size:28px">🏥</span>
+    </div>
     <div class="login-title">КНП ХОР «ОКЛ»</div>
     <div class="login-sub">Облік військовослужбовців</div>
     <div class="role-select">
@@ -209,7 +212,10 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 <div id="appWrap" style="display:none">
 <header class="hdr">
   <div class="logo">
-    <div class="logo-icon">🏥</div>
+    <div class="logo-icon" id="logoIcon">
+      <img id="logoImg" src="" alt="🏥" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:none">
+      <span id="logoEmoji">🏥</span>
+    </div>
     <div><div>КНП ХОР «ОКЛ»</div><div class="logo-sub">Облік військовослужбовців</div></div>
   </div>
   <div class="hdr-right">
@@ -581,6 +587,28 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
       <div>
         <div style="font-size:12px;color:var(--t3);margin-bottom:16px;padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b)" id="lastLoginInfo">Останній вхід: —</div>
+      <!-- Логотип -->
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--t2)">🖼️ Логотип</div>
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap">
+        <div id="logoPreview" style="width:60px;height:60px;background:var(--ac);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden">
+          <img id="cfgLogoPreviewImg" src="" style="width:100%;height:100%;object-fit:cover;display:none" alt="">
+          <span id="cfgLogoPreviewEmoji">🏥</span>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:12px;color:var(--t3);margin-bottom:8px">Вставте URL зображення або base64</div>
+          <input class="f" type="text" id="logoUrlInput" placeholder="https://... або data:image/png;base64,..." style="margin-bottom:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn bp" style="font-size:12px;padding:6px 12px" onclick="saveLogo()">Зберегти</button>
+            <label class="btn bg2" style="font-size:12px;padding:6px 12px;cursor:pointer">
+              📁 Завантажити файл
+              <input type="file" accept="image/*" style="display:none" onchange="uploadLogoFile(this)">
+            </label>
+            <button class="btn bg2" style="font-size:12px;padding:6px 12px" onclick="removeLogo()">✕ Скинути</button>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--b);margin-bottom:20px"></div>
+
       <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔗 URL Apps Script</div>
         <div style="background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--t);word-break:break-all;margin-bottom:10px" id="currentApiUrl"></div>
         <button class="btn bg2" onclick="testApi()">🔍 Перевірити з'єднання</button>
@@ -649,7 +677,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <script>
 // ══ КОНФІГ ══
-const API_URL = 'https://script.google.com/macros/s/AKfycbwbLJTqT2DTtAZxcp5-xCcQ5YGwdNNycZdLYEmRGjjRLrsSimaYuNFEt0b0h-wobp7y/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz54Dikr5FRqLugjfexYv6JGPZ-extMJADhY15prRp2Gxd7XXdhLTQu_MA__trql67Fhg/exec';
 const DEV_PASSWORD = 'dev2024okl';
 const PASSWORDS = { admin: 'admin123', doctor: 'doctor123' };
 const CHANGE_CODE = '1234'; // ← код для внесення змін адміном
@@ -874,13 +902,29 @@ async function load(silent=false){
   // Завантажуємо з сервера (якщо кеш старий або force reload)
   if(cacheAge > 30 || !cached) {
     try{
-      const d=await gsr('runGetPatients');
-      all=d.patients||[];
-      sessionStorage.setItem('okl_pts_cache', JSON.stringify(all));
-      sessionStorage.setItem('okl_pts_time', Date.now());
-      render(all);stats(all);depts(all);
-      document.getElementById('cnt').textContent=all.filter(p=>!p.dischargeDate).length;
-      document.getElementById('tb').style.opacity='1';
+      // Крок 1: Швидко завантажуємо тільки активних пацієнтів
+      const dActive = await apiCall('getActivePatients');
+      const activePts = dActive.patients || [];
+      all = activePts;
+      render(all); stats(all); depts(all);
+      document.getElementById('cnt').textContent = all.filter(p=>!p.dischargeDate).length;
+      document.getElementById('tb').style.opacity = '1';
+
+      // Крок 2: У фоні завантажуємо ВСІХ (включно з виписаними)
+      apiCall('getPatients').then(dAll => {
+        all = dAll.patients || [];
+        sessionStorage.setItem('okl_pts_cache', JSON.stringify(all));
+        sessionStorage.setItem('okl_pts_time', Date.now());
+        // Оновлюємо тільки якщо є фільтр на виписаних або пошук
+        const st = document.getElementById('fS')?.value;
+        if(st === 'd' || document.getElementById('srch')?.value) {
+          render(all); stats(all); depts(all);
+        } else {
+          stats(all); depts(all);
+          document.getElementById('cnt').textContent = all.filter(p=>!p.dischargeDate).length;
+        }
+      }).catch(()=>{});
+
     }catch(e){
       if(!cached) tb.innerHTML=`<tr class="lr"><td colspan="12" style="color:var(--r)">⚠ ${e.message}</td></tr>`;
       else { render(all); document.getElementById('tb').style.opacity='1'; }
@@ -1361,6 +1405,84 @@ function resolveChangeCode(proceed){
   if(_changeCodeResolve)_changeCodeResolve(true);
 }
 
+// ── Логотип ──
+function applyLogo(src) {
+  if (!src) return;
+  // Хедер
+  const img = document.getElementById('logoImg');
+  const emoji = document.getElementById('logoEmoji');
+  if (img && emoji) {
+    img.src = src;
+    img.style.display = 'block';
+    emoji.style.display = 'none';
+  }
+  // Логін
+  const lImg = document.getElementById('loginLogoImg');
+  const lEmoji = document.getElementById('loginLogoEmoji');
+  if (lImg && lEmoji) {
+    lImg.src = src;
+    lImg.style.display = 'block';
+    lEmoji.style.display = 'none';
+  }
+  // Превью в налаштуваннях
+  const pImg = document.getElementById('cfgLogoPreviewImg');
+  const pEmoji = document.getElementById('cfgLogoPreviewEmoji');
+  if (pImg && pEmoji) {
+    pImg.src = src;
+    pImg.style.display = 'block';
+    pEmoji.style.display = 'none';
+  }
+  // Фавіконка
+  let favicon = document.querySelector("link[rel~='icon']");
+  if (!favicon) { favicon = document.createElement('link'); favicon.rel = 'icon'; document.head.appendChild(favicon); }
+  favicon.href = src;
+}
+
+function removeLogo() {
+  localStorage.removeItem('okl_logo');
+  // Показуємо емодзі
+  ['logoImg','loginLogoImg','cfgLogoPreviewImg'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.src = ''; }
+  });
+  ['logoEmoji','loginLogoEmoji','cfgLogoPreviewEmoji'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  document.getElementById('logoUrlInput').value = '';
+  notify('Логотип скинуто','ok');
+}
+
+function saveLogo() {
+  const src = document.getElementById('logoUrlInput').value.trim();
+  if (!src) { notify('Введіть URL зображення','err'); return; }
+  localStorage.setItem('okl_logo', src);
+  applyLogo(src);
+  notify('Логотип збережено ✓','ok');
+}
+
+function uploadLogoFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  // Обмеження розміру 500KB
+  if (file.size > 500 * 1024) { notify('Файл завеликий (макс. 500KB)','err'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const src = e.target.result;
+    localStorage.setItem('okl_logo', src);
+    document.getElementById('logoUrlInput').value = src.substring(0, 50) + '...';
+    applyLogo(src);
+    notify('Логотип завантажено ✓','ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Завантажуємо логотип при старті
+document.addEventListener('DOMContentLoaded', () => {
+  const savedLogo = localStorage.getItem('okl_logo');
+  if (savedLogo) applyLogo(savedLogo);
+});
+
 function openCfg(){
   document.getElementById('cfgPwInput').value='';
   document.getElementById('cfgPwErr').textContent='';
@@ -1372,6 +1494,16 @@ function unlockCfg(){
   if(pw!==DEV_PASSWORD){document.getElementById('cfgPwErr').textContent='Невірний пароль';document.getElementById('cfgPwInput').select();return;}
   cm('cfgPwModal');
   document.getElementById('currentApiUrl').textContent=API_URL;
+  // Показуємо поточний логотип
+  const savedLogo = localStorage.getItem('okl_logo');
+  const logoInp = document.getElementById('logoUrlInput');
+  if (logoInp) logoInp.value = savedLogo ? (savedLogo.startsWith('data:') ? savedLogo.substring(0,50)+'...' : savedLogo) : '';
+  if (savedLogo) {
+    const pImg = document.getElementById('cfgLogoPreviewImg');
+    const pEmoji = document.getElementById('cfgLogoPreviewEmoji');
+    if (pImg) { pImg.src = savedLogo; pImg.style.display = 'block'; }
+    if (pEmoji) pEmoji.style.display = 'none';
+  }
   document.getElementById('apiStatus').textContent='';
   const lastLogin=localStorage.getItem('okl_last_login')||'невідомо';
   const lastLoginEl=document.getElementById('lastLoginInfo');
