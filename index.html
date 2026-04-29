@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>КНП ХОР "ОКЛ"</title>
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/sergey0438/military-okl/main/IMG_3474%20(2).PNG">
 <style>
 :root{
   --bg:#f0f4f8;--s:#ffffff;--s2:#f8fafc;--b:#e2e8f0;--b2:#f1f5f9;
@@ -169,12 +170,18 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 
 <div id="loginWrap" class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">🏥</div>
+    <div class="login-logo" style="background:none;padding:4px">
+      <img src="https://raw.githubusercontent.com/sergey0438/military-okl/main/IMG_3474%20(2).PNG" style="width:100%;height:100%;object-fit:contain;border-radius:8px" alt="ОКЛ">
+    </div>
     <div class="login-title">КНП ХОР «ОКЛ»</div>
     <div class="login-sub">Облік військовослужбовців</div>
     <div class="role-select">
       <div class="role-btn" id="roleAdminBtn" onclick="selectRole('admin')"><span class="role-icon">🔐</span>Адміністратор</div>
       <div class="role-btn" id="roleDoctorBtn" onclick="selectRole('doctor')"><span class="role-icon">👨‍⚕️</span>Лікар</div>
+    </div>
+    <div class="pw-group" id="surnameGroup" style="display:none">
+      <label class="pw-label">Прізвище *</label>
+      <input class="pw-input" type="text" id="surnameInput" placeholder="Введіть прізвище" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="pw-group" id="pwGroup">
       <label class="pw-label">Пароль</label>
@@ -189,7 +196,9 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 <div id="appWrap" style="display:none">
 <header class="hdr">
   <div class="logo">
-    <div class="logo-icon">🏥</div>
+    <div class="logo-icon" style="background:none;padding:2px">
+      <img src="https://raw.githubusercontent.com/sergey0438/military-okl/main/IMG_3474%20(2).PNG" style="width:100%;height:100%;object-fit:contain;border-radius:6px" alt="ОКЛ">
+    </div>
     <div><div>КНП ХОР «ОКЛ»</div><div class="logo-sub">Облік військовослужбовців</div></div>
   </div>
   <div class="hdr-right">
@@ -464,7 +473,8 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   <div class="md" style="max-width:600px">
     <div class="mh"><div><div class="mt">⚙️ Налаштування</div><div class="ms">Захищений розділ</div></div><button class="mx" onclick="cm('cfgModal')">✕</button></div>
     <div class="mb" style="display:flex;flex-direction:column;gap:20px">
-      <div style="font-size:12px;color:var(--t3);padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b)" id="lastLoginInfo">Останній вхід: —</div>
+      <div style="font-size:12px;color:var(--t3);padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b);margin-bottom:8px" id="lastLoginInfo">Останній вхід адміна: —</div>
+      <div style="font-size:12px;padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b)" id="lastLoginsInfo">Завантаження...</div>
       <div>
         <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔥 Firebase Cloud Functions</div>
         <div style="background:var(--gd);border:1px solid rgba(22,163,74,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--g)">✓ Захищений API — паролі тільки на сервері</div>
@@ -500,7 +510,7 @@ const ALL_DEPTS = [
 const OPS_DEPTS = [...ALL_DEPTS];
 
 // ══ СТАН ══
-let _token = null, _role = null;
+let _token = null, _role = null, _surname = '';
 let all = [], rrows = [], opsData = {};
 let _disId = null, _editId = null, _delId = null;
 
@@ -553,16 +563,20 @@ function selectRole(r){
 
 async function doLogin(){
   if(!_role){$('pwErr').textContent='Оберіть роль';return;}
-  const pw = _role==='doctor' ? 'doctor' : $('pwInput').value;
-  if(!pw && _role!=='doctor'){$('pwErr').textContent='Введіть пароль';return;}
+  const pw = $('pwInput').value;
+  const surname = ($('surnameInput')?.value||'').trim();
+  if(!pw){$('pwErr').textContent='Введіть пароль';return;}
+  if(_role==='doctor'&&!surname){$('pwErr').textContent='Введіть прізвище';return;}
 
   const btn=$('loginBtn');
   btn.textContent='Перевірка...';btn.disabled=true;
   try{
-    const d = await api('POST','login',{role:_role, password:pw});
+    const d = await api('POST','login',{role:_role, password:pw, surname});
     _token = d.token;
+    _surname = d.surname||surname||'';
     sessionStorage.setItem('okl_token', _token);
     sessionStorage.setItem('okl_role', _role);
+    sessionStorage.setItem('okl_surname', _surname);
     localStorage.setItem('okl_last_login', new Date().toLocaleString('uk-UA',{timeZone:'Europe/Kiev'}));
     showApp(_role);
   }catch(e){
@@ -575,6 +589,8 @@ function doLogout(){
   _token=null;_role=null;
   sessionStorage.removeItem('okl_token');
   sessionStorage.removeItem('okl_role');
+  sessionStorage.removeItem('okl_surname');
+  _surname='';
   $('loginWrap').style.display='flex';
   $('appWrap').style.display='none';
   $('pwInput').value='';$('pwErr').textContent='';
@@ -588,20 +604,25 @@ function showApp(role){
   $('loginWrap').style.display='none';
   $('appWrap').style.display='block';
   const isAdmin=role==='admin';
-  $('roleBadge').textContent=isAdmin?'🔐 Адміністратор':'👨‍⚕️ Лікар';
+  // Показуємо прізвище в хедері
+  const name=_surname?` — ${_surname}`:'';
+  $('roleBadge').textContent=isAdmin?`🔐 Адміністратор${name}`:`👨‍⚕️ Лікар${name}`;
   $('roleBadge').className='role-badge '+(isAdmin?'role-admin':'role-doctor');
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
   tick();
   $('rdate').value=iso();
   $('opsDate').value=iso();
   load();
+  // Адмін — завантажуємо останні входи
+  if(isAdmin) loadLastLogins();
 }
 
 // Відновлення сесії
 window.addEventListener('DOMContentLoaded',()=>{
   const t=sessionStorage.getItem('okl_token');
   const r=sessionStorage.getItem('okl_role');
-  if(t&&r){_token=t;_role=r;showApp(r);}
+  const s=sessionStorage.getItem('okl_surname')||'';
+  if(t&&r){_token=t;_role=r;_surname=s;showApp(r);}
 });
 
 function tick(){
@@ -974,6 +995,19 @@ async function saveManual(){
     await api('POST',`reports/${manualDate}`,{data});
     cm('manualM');notify('Дані збережено ✓','ok');loadR(manualDate);
   }catch(e){notify('Помилка: '+e.message,'err');}
+}
+
+async function loadLastLogins(){
+  try{
+    const d=await api('GET','lastlogins');
+    const data=d.data||{};
+    const el=$('lastLoginsInfo');
+    if(!el)return;
+    const doctor=data.doctor;
+    el.innerHTML=doctor
+      ?`<span style="color:var(--t2)">Останній вхід лікаря:</span> <strong>${esc(doctor.surname)}</strong> — ${esc(doctor.time)}`
+      :'Входів лікарів ще не було';
+  }catch(e){}
 }
 
 function exportR(){
