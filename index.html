@@ -549,24 +549,26 @@ document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(
 function selectRole(r){
   $('roleAdminBtn').classList.toggle('selected',r==='admin');
   $('roleDoctorBtn').classList.toggle('selected',r==='doctor');
-  $('pwInput').value=''; $('pwErr').textContent='';
+  $('pwInput').value='';$('pwErr').textContent='';
+  if($('surnameInput'))$('surnameInput').value='';
   _role=r;
-  if(r==='doctor'){
-    $('pwGroup').style.display='none';
-    $('loginBtn').textContent='Увійти як Лікар';
-  } else {
-    $('pwGroup').style.display='';
-    $('loginBtn').textContent='Увійти';
-    setTimeout(()=>$('pwInput').focus(),50);
-  }
+  // Поле прізвища — тільки для лікаря
+  const sg=$('surnameGroup');
+  if(sg)sg.style.display=r==='doctor'?'':'none';
+  // Пароль — для всіх
+  $('pwGroup').style.display='';
+  $('pwGroup').querySelector('.pw-label').textContent=r==='doctor'?'Пароль лікаря':'Пароль';
+  $('pwInput').placeholder=r==='doctor'?'Пароль лікаря':'Введіть пароль';
+  $('loginBtn').textContent=r==='doctor'?'Увійти як Лікар':'Увійти';
+  setTimeout(()=>(r==='doctor'&&$('surnameInput')?$('surnameInput'):$('pwInput')).focus(),50);
 }
 
 async function doLogin(){
   if(!_role){$('pwErr').textContent='Оберіть роль';return;}
-  const pw = $('pwInput').value;
+  const pw = $('pwInput').value.trim();
   const surname = ($('surnameInput')?.value||'').trim();
-  if(!pw){$('pwErr').textContent='Введіть пароль';return;}
   if(_role==='doctor'&&!surname){$('pwErr').textContent='Введіть прізвище';return;}
+  if(!pw){$('pwErr').textContent='Введіть пароль';return;}
 
   const btn=$('loginBtn');
   btn.textContent='Перевірка...';btn.disabled=true;
