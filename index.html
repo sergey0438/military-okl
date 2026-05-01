@@ -958,23 +958,24 @@ async function loadR(dateStr){
   const deadline=new Date(date+'T08:00:00+03:00');
   // Звіт — тільки активні пацієнти (без виписки) на дату звіту
   // Після 08:00 — пацієнти додані сьогодні після 08:00 НЕ потрапляють в звіт
-  const now=new Date();
-  const kyivHour=parseInt(new Date().toLocaleString('uk-UA',{timeZone:'Europe/Kiev',hour:'numeric',hour12:false}));
+  // Поточний київський час
+  const kyivNowStr=new Date().toLocaleString('uk-UA',{timeZone:'Europe/Kiev',hour:'2-digit',minute:'2-digit',hour12:false});
+  const [kyivH,kyivM]=kyivNowStr.split(':').map(Number);
+  const kyivMinutes=kyivH*60+kyivM;
+  const deadlineMinutes=9*60; // 09:00
+
   const active=all.filter(p=>{
     if(!p.admDate)return false;
     if(p.dischargeDate)return false;
     if(p.admDate>date)return false;
-    // Якщо пацієнт доданий сьогодні після 08:00 — не показуємо в звіті сьогоднішнього дня
-    if(date===iso()&&kyivHour>=8&&p.admDate===date&&p.createdAt){
+    // Пацієнти додані сьогодні після 08:00 — не в звіті поточного дня
+    if(p.admDate===date && p.createdAt && kyivMinutes>=deadlineMinutes){
       try{
-        // createdAt формат: "01.05.2026, 12:43:20"
-        const parts=p.createdAt.split(', ');
-        if(parts.length===2){
-          const dateParts=parts[0].split('.');
-          const dateStr=`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${parts[1]}`;
-          const createdDate=new Date(dateStr);
-          const deadline=new Date(date+'T08:00:00');
-          if(createdDate>deadline)return false;
+        // createdAt: "01.05.2026, 12:43:20" -> парсимо вручну
+        const m=p.createdAt.match(/(\d+)\.(\d+)\.(\d+),\s*(\d+):(\d+)/);
+        if(m){
+          const createdMinutes=parseInt(m[4])*60+parseInt(m[5]);
+          if(createdMinutes>=deadlineMinutes)return false;
         }
       }catch(e){}
     }
