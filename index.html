@@ -646,8 +646,15 @@ function nav(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   $('page-'+n).classList.add('active');
-  $('tab-'+n).classList.add('active');
-  if(n==='r')loadR();
+  $('tab-'+n)?.classList.add('active');
+  if(n==='r'){
+    // Якщо пацієнти ще не завантажені — чекаємо
+    if(!all.length){
+      load().then(()=>loadR());
+    } else {
+      loadR();
+    }
+  }
   if(n==='ops')loadOps();
 }
 
@@ -1002,6 +1009,7 @@ function renderR(d){
     <div class="sc g"><div class="sl">Хворі</div><div class="sv">${sick}</div></div>`:'';
   const tb=$('rtb');
   const n=v=>(v===null||v===undefined||v==='')?'—':v;
+  if(!d.rows||!d.rows.length){tb.innerHTML='<tr class="lr"><td colspan="11">Даних не знайдено</td></tr>';return;}
   let html=s?`<tr class="tr-total"><td>📊 Разом</td><td>${n(s.total)}</td><td>${n(s.laying)}</td><td>${n(s.sitting)}</td><td>${n(s.discharge)}</td><td>${n(s.evac)}</td><td style="${s.freeBeds<=0?'color:var(--r);font-weight:700':'color:var(--g)'}">${s.freeBeds===0?'0 ⚠':s.freeBeds<0?s.freeBeds+' 🔴':n(s.freeBeds)||'—'}</td><td><span class="tag-g">${n(s.lt15)}</span></td><td><span class="tag-r">${n(s.gt15)}</span></td><td>${n(s.svid)||'—'}</td><td>${n(s.pol)||'—'}</td></tr>`:'';
   html+=d.rows.map(r=>`<tr>
     <td>${esc(r.dept)}</td><td><strong>${n(r.total)}</strong></td><td>${n(r.laying)}</td><td>${n(r.sitting)}</td>
