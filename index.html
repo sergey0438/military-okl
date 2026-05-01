@@ -328,12 +328,14 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
       </div>
       <div class="fi"><label class="fl">Відділення *</label>
         <select class="f" id="fd2"><option value="">Виберіть відділення</option>
-          <option>ВНМД</option><option>Хірургічне</option><option>Неврологічне №1</option>
-          <option>Неврологічне №2</option><option>Інсультне</option><option>Кардіологія</option>
-          <option>Гастроентерологічне</option><option>Серцево-судинна хірургія</option>
-          <option>Ортопедія</option><option>Нейрохірургія</option><option>Ревматологія</option>
-          <option>Травматологія</option><option>ВХГШ</option><option>Офтальмологія</option>
-          <option>ПАВ</option><option>Ендокринологія</option><option>Реабілітація</option>
+          <option>ВЕНМД</option><option>Нейрохірургія</option>
+          <option>Серцево-судинна хірургія</option><option>Хірургія</option>
+          <option>Травматологія</option><option>Ортопедичне</option>
+          <option>ВХГШ</option><option>Офтальмологія</option><option>Реабілітація</option>
+          <option>Неврологія №1</option><option>Неврологія №2</option>
+          <option>Інсультне відділення</option><option>Кардіологія</option>
+          <option>Гастроентерологія</option><option>Ревматологія</option>
+          <option>Ендокринологія</option><option>ПАВ</option>
           <option>Шкірно-венерологічне</option><option>Токсикологія</option>
           <option>Патології вагітності</option><option>Сумісного перебування</option>
           <option>ВІТ дорослий</option><option>Гінекологія</option>
@@ -386,12 +388,14 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
       <div class="fi"><label class="fl">Категорія</label><select class="f" id="ep_cat"><option>ЗСУ</option><option>НГУ</option><option>СБУ</option><option>Поліція</option><option>ДСНС</option><option>ДПСУ</option><option>Інші</option></select></div>
       <div class="fi s2"><label class="fl">Відділення</label>
         <select class="f" id="ep_dept"><option value="">Виберіть</option>
-          <option>ВНМД</option><option>Хірургічне</option><option>Неврологічне №1</option>
-          <option>Неврологічне №2</option><option>Інсультне</option><option>Кардіологія</option>
-          <option>Гастроентерологічне</option><option>Серцево-судинна хірургія</option>
-          <option>Ортопедія</option><option>Нейрохірургія</option><option>Ревматологія</option>
-          <option>Травматологія</option><option>ВХГШ</option><option>Офтальмологія</option>
-          <option>ПАВ</option><option>Ендокринологія</option><option>Реабілітація</option>
+          <option>ВЕНМД</option><option>Нейрохірургія</option>
+          <option>Серцево-судинна хірургія</option><option>Хірургія</option>
+          <option>Травматологія</option><option>Ортопедичне</option>
+          <option>ВХГШ</option><option>Офтальмологія</option><option>Реабілітація</option>
+          <option>Неврологія №1</option><option>Неврологія №2</option>
+          <option>Інсультне відділення</option><option>Кардіологія</option>
+          <option>Гастроентерологія</option><option>Ревматологія</option>
+          <option>Ендокринологія</option><option>ПАВ</option>
           <option>Шкірно-венерологічне</option><option>Токсикологія</option>
           <option>Патології вагітності</option><option>Сумісного перебування</option>
           <option>ВІТ дорослий</option><option>Гінекологія</option>
@@ -443,9 +447,9 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   <div class="md wide">
     <div class="mh"><div><div class="mt">✏️ Внести вільні ліжка</div><div class="ms" id="manualDateLbl"></div></div><button class="mx" onclick="cm('manualM')">✕</button></div>
     <div class="mb">
-      <div class="info-banner">ℹ️ Введіть кількість вільних ліжок по кожному відділенню.</div>
+      <div class="info-banner">ℹ️ Введіть загальну кількість ліжок по кожному відділенню. Вільні = Ліжка − Пацієнти.</div>
       <div class="tw"><table class="rt">
-        <thead><tr><th style="text-align:left">Відділення</th><th>Всього</th><th>Виписка</th><th>На евак.</th><th>Вільних ✏️</th></tr></thead>
+        <thead><tr><th style="text-align:left">Відділення</th><th>Пацієнтів</th><th>Виписка</th><th>На евак.</th><th>Всього ліжок ✏️</th><th>Вільних</th></tr></thead>
         <tbody id="manualTb"></tbody>
       </table></div>
     </div>
@@ -501,13 +505,18 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 const API = 'https://europe-west1-okl-hospital-41197.cloudfunctions.net/api';
 
 const ALL_DEPTS = [
-  'ВНМД','Хірургічне','Неврологічне №1','Неврологічне №2','Інсультне',
-  'Кардіологія','Гастроентерологічне','Серцево-судинна хірургія','Ортопедія',
-  'Нейрохірургія','Ревматологія','Травматологія','ВХГШ','Офтальмологія',
-  'ПАВ','Ендокринологія','Реабілітація','Шкірно-венерологічне','Токсикологія',
-  'Патології вагітності','Сумісного перебування','ВІТ дорослий','Гінекологія'
+  'ВЕНМД','Нейрохірургія','Серцево-судинна хірургія','Хірургія',
+  'Травматологія','Ортопедичне','ВХГШ','Офтальмологія','Реабілітація',
+  'Неврологія №1','Неврологія №2','Інсультне відділення','Кардіологія',
+  'Гастроентерологія','Ревматологія','Ендокринологія','ПАВ',
+  'Шкірно-венерологічне','Токсикологія','Патології вагітності',
+  'Сумісного перебування','ВІТ дорослий','Гінекологія'
 ];
-const OPS_DEPTS = [...ALL_DEPTS];
+const OPS_DEPTS = [
+  'ВЕНМД','Нейрохірургія','Серцево-судинна хірургія','Хірургія',
+  'Травматологія','Ортопедичне','ВХГШ','Офтальмологія',
+  'Кардіологія','Сумісного перебування','Гінекологія'
+];
 
 // ══ СТАН ══
 let _token = null, _role = null, _surname = '';
@@ -946,15 +955,25 @@ async function loadR(dateStr){
     if(p.svid==='Так')d.svid++;
     if(p.pol==='Так')d.pol++;
   });
-  let manualData={};
-  try{const d=await api('GET',`reports/${date}`);manualData=d.data||{};}catch(e){}
+  let manualData={}, bedConfig={};
+  try{
+    const [repD, bedD] = await Promise.all([
+      api('GET',`reports/${date}`),
+      api('GET','bedconfig'),
+    ]);
+    manualData=repD.data||{};
+    bedConfig=bedD.data||{};
+  }catch(e){
+    try{const d=await api('GET',`reports/${date}`);manualData=d.data||{};}catch(e2){}
+  }
   const summary={total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0,freeBeds:0};
   const rows=ALL_DEPTS.map(dept=>{
     const r=byDept[dept]||{dept,total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0};
-    const freeBeds=manualData[dept]?.freeBeds||'';
+    const totalBeds=Number(manualData[dept]?.totalBeds||bedConfig[dept]?.totalBeds||0);
+    const freeBeds=totalBeds>0?totalBeds-(r.total||0):null;
     Object.keys(summary).forEach(k=>{if(k!=='freeBeds')summary[k]+=(r[k]||0);});
-    summary.freeBeds+=Number(freeBeds)||0;
-    return{...r,freeBeds};
+    if(freeBeds!==null)summary.freeBeds+=freeBeds;
+    return{...r,freeBeds,totalBeds};
   });
   rrows=rows;
   const hasManual=Object.keys(manualData).length>0;
@@ -991,11 +1010,16 @@ function renderR(d){
     <div class="sc g"><div class="sl">Хворі</div><div class="sv">${sick}</div></div>`:'';
   const tb=$('rtb');
   const n=v=>(v===null||v===undefined||v==='')?'—':v;
-  let html=s?`<tr class="tr-total"><td>📊 Разом</td><td>${n(s.total)}</td><td>${n(s.laying)}</td><td>${n(s.sitting)}</td><td>${n(s.discharge)}</td><td>${n(s.evac)}</td><td>${n(s.freeBeds)||'—'}</td><td><span class="tag-g">${n(s.lt15)}</span></td><td><span class="tag-r">${n(s.gt15)}</span></td><td>${n(s.svid)||'—'}</td><td>${n(s.pol)||'—'}</td></tr>`:'';
+  let html=s?`<tr class="tr-total"><td>📊 Разом</td><td>${n(s.total)}</td><td>${n(s.laying)}</td><td>${n(s.sitting)}</td><td>${n(s.discharge)}</td><td>${n(s.evac)}</td><td style="${s.freeBeds<=0?'color:var(--r);font-weight:700':'color:var(--g)'}">${s.freeBeds===0?'0 ⚠':s.freeBeds<0?s.freeBeds+' 🔴':n(s.freeBeds)||'—'}</td><td><span class="tag-g">${n(s.lt15)}</span></td><td><span class="tag-r">${n(s.gt15)}</span></td><td>${n(s.svid)||'—'}</td><td>${n(s.pol)||'—'}</td></tr>`:'';
   html+=d.rows.map(r=>`<tr>
     <td>${esc(r.dept)}</td><td><strong>${n(r.total)}</strong></td><td>${n(r.laying)}</td><td>${n(r.sitting)}</td>
     <td>${n(r.discharge)}</td><td>${n(r.evac)}</td>
-    <td style="color:${r.freeBeds?'var(--t)':'var(--t3)'}">${n(r.freeBeds)}</td>
+    <td style="${r.freeBeds===null||r.freeBeds===''?'color:var(--t3)':r.freeBeds<=0?'color:var(--r);font-weight:700':'color:var(--g)'}">${
+      r.freeBeds===null||r.freeBeds===''?'—':
+      r.freeBeds===0?'0 ⚠':
+      r.freeBeds<0?r.freeBeds+' 🔴':
+      r.freeBeds
+    }</td>
     <td>${r.lt15>0?`<span class="tag-g">${r.lt15}</span>`:'—'}</td>
     <td>${r.gt15>0?`<span class="tag-r">${r.gt15}</span>`:'—'}</td>
     <td>${r.svid>0?r.svid:'—'}</td><td>${r.pol>0?r.pol:'—'}</td>
@@ -1008,18 +1032,49 @@ async function openManualInput(){
   manualDate=date;
   $('manualDateLbl').textContent='Дата: '+fd(date);
   $('manualM').classList.add('open');
-  let saved={};
-  try{const d=await api('GET',`reports/${date}`);saved=d.data||{};}catch(e){}
+  let saved={}, bedCfg={};
+  try{
+    const [repD, bedD] = await Promise.all([
+      api('GET',`reports/${date}`),
+      api('GET','bedconfig'),
+    ]);
+    saved=repD.data||{};
+    bedCfg=bedD.data||{};
+  }catch(e){
+    try{const d=await api('GET',`reports/${date}`);saved=d.data||{};}catch(e2){}
+  }
   $('manualTb').innerHTML=ALL_DEPTS.map(dept=>{
     const r=rrows.find(x=>x.dept===dept)||{total:0,discharge:0,evac:0};
-    return`<tr><td>${esc(dept)}</td><td>${r.total||0}</td><td>${r.discharge||0}</td><td>${r.evac||0}</td>
-      <td><input class="mini" type="number" min="0" id="fb_${esc(dept)}" value="${saved[dept]?.freeBeds||''}"></td></tr>`;
+    const totalBeds=Number(saved[dept]?.totalBeds||bedCfg[dept]?.totalBeds||0);
+    const free=totalBeds>0?totalBeds-(r.total||0):'—';
+    const freeStyle=typeof free==='number'&&free<=0?'color:var(--r);font-weight:700':'color:var(--g)';
+    return`<tr>
+      <td>${esc(dept)}</td>
+      <td>${r.total||0}</td>
+      <td>${r.discharge||0}</td>
+      <td>${r.evac||0}</td>
+      <td><input class="mini" type="number" min="0" id="fb_${esc(dept)}" value="${totalBeds||''}" oninput="updateFreePreview('${esc(dept)}',${r.total||0},this.value)"></td>
+      <td id="free_${esc(dept)}" style="${freeStyle}">${typeof free==='number'?free+'':'—'}</td>
+    </tr>`;
   }).join('');
 }
 let manualDate='';
+function updateFreePreview(dept,occupied,totalVal){
+  const total=Number(totalVal)||0;
+  const free=total>0?total-occupied:null;
+  const el=document.getElementById('free_'+dept);
+  if(!el)return;
+  if(free===null){el.textContent='—';el.style.color='var(--t3)';}
+  else if(free<=0){el.textContent=free===0?'0 ⚠':free+' 🔴';el.style.color='var(--r)';el.style.fontWeight='700';}
+  else{el.textContent=free;el.style.color='var(--g)';el.style.fontWeight='';}
+}
+
 async function saveManual(){
   const data={};
-  ALL_DEPTS.forEach(dept=>{data[dept]={freeBeds:Number($(`fb_${esc(dept)}`)?.value||0)};});
+  ALL_DEPTS.forEach(dept=>{
+    const totalBeds=Number(document.getElementById('fb_'+dept)?.value||0);
+    data[dept]={totalBeds};
+  });
   try{
     await api('POST',`reports/${manualDate}`,{data});
     cm('manualM');notify('Дані збережено ✓','ok');loadR(manualDate);
