@@ -957,10 +957,28 @@ async function loadR(dateStr){
   $('rdlbl').textContent='Зріз на: '+fd(date);
   const deadline=new Date(date+'T08:00:00+03:00');
   // Звіт — тільки активні пацієнти (без виписки) на дату звіту
+  // Після 08:00 — пацієнти додані сьогодні після 08:00 НЕ потрапляють в звіт
+  const now=new Date();
+  const kyivHour=parseInt(new Date().toLocaleString('uk-UA',{timeZone:'Europe/Kiev',hour:'numeric',hour12:false}));
   const active=all.filter(p=>{
     if(!p.admDate)return false;
     if(p.dischargeDate)return false;
-    return p.admDate<=date;
+    if(p.admDate>date)return false;
+    // Якщо пацієнт доданий сьогодні після 08:00 — не показуємо в звіті сьогоднішнього дня
+    if(date===iso()&&kyivHour>=8&&p.admDate===date&&p.createdAt){
+      try{
+        // createdAt формат: "01.05.2026, 12:43:20"
+        const parts=p.createdAt.split(', ');
+        if(parts.length===2){
+          const dateParts=parts[0].split('.');
+          const dateStr=`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${parts[1]}`;
+          const createdDate=new Date(dateStr);
+          const deadline=new Date(date+'T08:00:00');
+          if(createdDate>deadline)return false;
+        }
+      }catch(e){}
+    }
+    return true;
   });
   const byDept={};
   active.forEach(p=>{
