@@ -956,16 +956,8 @@ async function loadR(dateStr){
     if(p.pol==='Так')d.pol++;
   });
   let manualData={}, bedConfig={};
-  try{
-    const [repD, bedD] = await Promise.all([
-      api('GET',`reports/${date}`),
-      api('GET','bedconfig'),
-    ]);
-    manualData=repD.data||{};
-    bedConfig=bedD.data||{};
-  }catch(e){
-    try{const d=await api('GET',`reports/${date}`);manualData=d.data||{};}catch(e2){}
-  }
+  try{ const d=await api('GET',`reports/${date}`); manualData=d.data||{}; }catch(e){}
+  try{ const d=await api('GET','bedconfig'); bedConfig=d.data||{}; }catch(e){}
   const summary={total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0,freeBeds:0};
   const rows=ALL_DEPTS.map(dept=>{
     const r=byDept[dept]||{dept,total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0};
@@ -1033,16 +1025,8 @@ async function openManualInput(){
   $('manualDateLbl').textContent='Дата: '+fd(date);
   $('manualM').classList.add('open');
   let saved={}, bedCfg={};
-  try{
-    const [repD, bedD] = await Promise.all([
-      api('GET',`reports/${date}`),
-      api('GET','bedconfig'),
-    ]);
-    saved=repD.data||{};
-    bedCfg=bedD.data||{};
-  }catch(e){
-    try{const d=await api('GET',`reports/${date}`);saved=d.data||{};}catch(e2){}
-  }
+  try{ const d=await api('GET',`reports/${date}`); saved=d.data||{}; }catch(e){}
+  try{ const d=await api('GET','bedconfig'); bedCfg=d.data||{}; }catch(e){}
   $('manualTb').innerHTML=ALL_DEPTS.map(dept=>{
     const r=rrows.find(x=>x.dept===dept)||{total:0,discharge:0,evac:0};
     const totalBeds=Number(saved[dept]?.totalBeds||bedCfg[dept]?.totalBeds||0);
