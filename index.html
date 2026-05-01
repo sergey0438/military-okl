@@ -976,7 +976,7 @@ async function loadR(dateStr){
   });
   rrows=rows;
   const hasManual=Object.keys(manualData).length>0;
-  renderR({rows,summary,date,hasManual});
+  renderR({rows,summary,date,hasManual,active});
 }
 
 function renderR(d){
@@ -994,9 +994,10 @@ function renderR(d){
     manualBtn.disabled=!canEdit;manualBtn.style.opacity=canEdit?'1':'0.4';
   }
   // Рахуємо по виду ураження
-  const injured=active.filter(p=>(p.injType||'').toLowerCase()==='поранений').length;
-  const trauma=active.filter(p=>(p.injType||'').toLowerCase()==='травмований').length;
-  const sick=active.filter(p=>(p.injType||'').toLowerCase()==='хворий').length;
+  const activeList=d.active||[];
+  const injured=activeList.filter(p=>(p.injType||'').toLowerCase()==='поранений').length;
+  const trauma=activeList.filter(p=>(p.injType||'').toLowerCase()==='травмований').length;
+  const sick=activeList.filter(p=>(p.injType||'').toLowerCase()==='хворий').length;
   $('rStats').innerHTML=s?`
     <div class="sc b"><div class="sl">Всього</div><div class="sv">${s.total??'—'}</div></div>
     <div class="sc r"><div class="sl">Лежачих</div><div class="sv">${s.laying??'—'}</div></div>
