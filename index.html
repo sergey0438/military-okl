@@ -298,10 +298,10 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
       <thead><tr>
         <th style="text-align:left">Відділення</th>
         <th>Всього</th><th>Лежачих</th><th>Сидячих</th>
-        <th>Виписка</th><th>На евак.</th><th>Вільних ліжок</th>
+        <th>На евак.</th><th style="background:rgba(37,99,235,.08);color:var(--bl)">Вільних ліжок</th>
         <th>&lt;15</th><th>&gt;15</th><th>Свідоцтво</th><th>З полону</th>
       </tr></thead>
-      <tbody id="rtb"><tr class="lr"><td colspan="11"><span class="sp"></span></td></tr></tbody>
+      <tbody id="rtb"><tr class="lr"><td colspan="10"><span class="sp"></span></td></tr></tbody>
     </table>
   </div>
 </div>
@@ -449,7 +449,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
     <div class="mb">
       <div class="info-banner">ℹ️ Введіть загальну кількість ліжок по кожному відділенню. Вільні = Ліжка − Пацієнти.</div>
       <div class="tw"><table class="rt">
-        <thead><tr><th style="text-align:left">Відділення</th><th>Пацієнтів</th><th>Виписка</th><th>На евак.</th><th>Всього ліжок ✏️</th><th>Вільних</th></tr></thead>
+        <thead><tr><th style="text-align:left">Відділення</th><th>Пацієнтів</th><th>На евак.</th><th>Всього ліжок ✏️</th><th>Вільних</th></tr></thead>
         <tbody id="manualTb"></tbody>
       </table></div>
     </div>
@@ -952,7 +952,7 @@ const DEPT_MAP = {
 function normDept(dept){ return DEPT_MAP[dept] || dept; }
 
 async function loadR(dateStr){
-  $('rtb').innerHTML=`<tr class="lr"><td colspan="11"><span class="sp"></span></td></tr>`;
+  $('rtb').innerHTML=`<tr class="lr"><td colspan="10"><span class="sp"></span></td></tr>`;
   const date=dateStr||$('rdate').value||iso();
   $('rdlbl').textContent='Зріз на: '+fd(date);
   const deadline=new Date(date+'T08:00:00+03:00');
@@ -984,12 +984,12 @@ async function loadR(dateStr){
   active.forEach(p=>{
     const dept=normDept(p.dept||'');
     if(!dept)return;
-    if(!byDept[dept])byDept[dept]={dept,total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0};
+    if(!byDept[dept])byDept[dept]={dept,total:0,laying:0,sitting:0,evac:0,lt15:0,gt15:0,svid:0,pol:0};
     const d=byDept[dept];
     const ev=(p.evacCategory||'').toLowerCase();
     d.total++;
     if(ev.includes('лежач'))d.laying++;else d.sitting++;
-    if(p.dischargeDate===date)d.discharge++;
+
     const days2=bd(p.admDate,date);
     if(days2<15)d.lt15++;else d.gt15++;
     if(p.svid==='Так')d.svid++;
@@ -998,7 +998,7 @@ async function loadR(dateStr){
   let manualData={}, bedConfig={};
   try{ const d=await api('GET',`reports/${date}`); manualData=d.data||{}; }catch(e){}
   try{ const d=await api('GET','bedconfig'); bedConfig=d.data||{}; }catch(e){}
-  const summary={total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0,freeBeds:0};
+  const summary={total:0,laying:0,sitting:0,evac:0,lt15:0,gt15:0,svid:0,pol:0,freeBeds:0};
   const rows=ALL_DEPTS.map(dept=>{
     const r=byDept[dept]||{dept,total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0};
     const totalBeds=Number(manualData[dept]?.totalBeds||bedConfig[dept]?.totalBeds||0);
@@ -1043,12 +1043,12 @@ function renderR(d){
     <div class="sc g"><div class="sl">Хворі</div><div class="sv">${sick}</div></div>`:'';
   const tb=$('rtb');
   const n=v=>(v===null||v===undefined||v==='')?'—':v;
-  if(!d.rows||!d.rows.length){tb.innerHTML='<tr class="lr"><td colspan="11">Даних не знайдено</td></tr>';return;}
-  let html=s?`<tr class="tr-total"><td>📊 Разом</td><td>${n(s.total)}</td><td>${n(s.laying)}</td><td>${n(s.sitting)}</td><td>${n(s.discharge)}</td><td>${n(s.evac)}</td><td style="${s.freeBeds<=0?'color:var(--r);font-weight:700':'color:var(--g)'}">${s.freeBeds===0?'0 ⚠':s.freeBeds<0?s.freeBeds+' 🔴':n(s.freeBeds)||'—'}</td><td><span class="tag-g">${n(s.lt15)}</span></td><td><span class="tag-r">${n(s.gt15)}</span></td><td>${n(s.svid)||'—'}</td><td>${n(s.pol)||'—'}</td></tr>`:'';
+  if(!d.rows||!d.rows.length){tb.innerHTML='<tr class="lr"><td colspan="10">Даних не знайдено</td></tr>';return;}
+  let html=s?`<tr class="tr-total"><td>📊 Разом</td><td>${n(s.total)}</td><td>${n(s.laying)}</td><td>${n(s.sitting)}</td><td>${n(s.evac)}</td><td style="background:rgba(37,99,235,.08);${s.freeBeds<=0?'color:var(--r);font-weight:700':'color:var(--bl);font-weight:700'}">${s.freeBeds===0?'0 ⚠':s.freeBeds<0?s.freeBeds+' 🔴':n(s.freeBeds)||'—'}</td><td><span class="tag-g">${n(s.lt15)}</span></td><td><span class="tag-r">${n(s.gt15)}</span></td><td>${n(s.svid)||'—'}</td><td>${n(s.pol)||'—'}</td></tr>`:'';
   html+=d.rows.map(r=>`<tr>
     <td>${esc(r.dept)}</td><td><strong>${n(r.total)}</strong></td><td>${n(r.laying)}</td><td>${n(r.sitting)}</td>
-    <td>${n(r.discharge)}</td><td>${n(r.evac)}</td>
-    <td style="${r.freeBeds===null||r.freeBeds===''?'color:var(--t3)':r.freeBeds<=0?'color:var(--r);font-weight:700':'color:var(--g)'}">${
+    <td>${n(r.evac)}</td>
+    <td style="background:rgba(37,99,235,.06);${r.freeBeds===null||r.freeBeds===''?'color:var(--t3)':r.freeBeds<=0?'color:var(--r);font-weight:700':'color:var(--bl);font-weight:600'}">${
       r.freeBeds===null||r.freeBeds===''?'—':
       r.freeBeds===0?'0 ⚠':
       r.freeBeds<0?r.freeBeds+' 🔴':
@@ -1077,7 +1077,6 @@ async function openManualInput(){
     return`<tr>
       <td>${esc(dept)}</td>
       <td>${r.total||0}</td>
-      <td>${r.discharge||0}</td>
       <td>${r.evac||0}</td>
       <td><input class="mini" type="number" min="0" id="fb_${esc(dept)}" value="${totalBeds||''}" oninput="updateFreePreview('${esc(dept)}',${r.total||0},this.value)"></td>
       <td id="free_${esc(dept)}" style="${freeStyle}">${typeof free==='number'?free+'':'—'}</td>
