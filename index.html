@@ -760,7 +760,7 @@ async function addP(){
   if(!state){notify('Оберіть стан','err');restore();return;}
   if(!adm){notify('Вкажіть дату госпіталізації','err');restore();return;}
   const diag=$('fg2').value.trim();
-  if(!diag||diag.length<10){notify('Діагноз обов'язковий (мінімум 10 символів)','err');restore();return;}
+  if(!diag||diag.length<10){notify('Діагноз обовязковий (мінімум 10 символів)','err');restore();return;}
 
   const dup=all.find(p=>!p.dischargeDate&&p.pib.trim().toLowerCase()===pib.toLowerCase());
   if(dup&&!confirm(`⚠️ Пацієнт "${pib}" вже є на лікуванні (${dup.dept}). Додати ще раз?`)){restore();return;}
@@ -851,16 +851,23 @@ function checkDuplicates(){
   active.forEach(p=>{const k=p.pib.trim().toLowerCase();if(!groups[k])groups[k]=[];groups[k].push(p);});
   const dups=Object.values(groups).filter(g=>g.length>1);
   $('dupCount').textContent=dups.length>0?`Знайдено ${dups.length} груп дублів`:'Дублів не знайдено';
-  $('dupContent').innerHTML=dups.length===0
-    ?'<div class="ok-banner">✓ Дублів не знайдено.</div>'
-    :dups.map(group=>`
-      <div style="background:var(--rd);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:12px;margin-bottom:10px">
-        <div style="font-weight:600;color:var(--r);margin-bottom:8px">👤 ${esc(group[0].pib)} (${group.length} записи)</div>
-        ${group.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--s);border-radius:6px;margin-bottom:4px;font-size:12px">
+  if(dups.length===0){
+    $('dupContent').innerHTML='<div class="ok-banner">✓ Дублів не знайдено.</div>';
+  } else {
+    $('dupContent').innerHTML=dups.map(group=>{
+      const rows=group.map(p=>{
+        const pid=p.id, ppib=esc(p.pib);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--s);border-radius:6px;margin-bottom:4px;font-size:12px">
           <span>${esc(p.dept)} | ${fd(p.admDate)}</span>
-          <button class="del-btn" onclick="cm('dupM');openDel('${p.id}','${esc(p.pib)}')">🗑</button>
-        </div>`).join('')}
-      </div>`).join('');
+          <button class="del-btn" onclick="cm('dupM');openDel('${pid}','${ppib}')">🗑</button>
+        </div>`;
+      }).join('');
+      return `<div style="background:var(--rd);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:12px;margin-bottom:10px">
+        <div style="font-weight:600;color:var(--r);margin-bottom:8px">👤 ${esc(group[0].pib)} (${group.length} записи)</div>
+        ${rows}
+      </div>`;
+    }).join('');
+  }
   $('dupM').classList.add('open');
 }
 
