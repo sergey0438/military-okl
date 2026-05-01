@@ -938,6 +938,19 @@ async function saveOps(){
 }
 
 // ══ ЗВІТ ══
+// Маппінг старих назв відділень на нові
+const DEPT_MAP = {
+  'Хірургічне':          'Хірургія',
+  'Гастроентерологічне': 'Гастроентерологія',
+  'Інсультне':           'Інсультне відділення',
+  'Неврологічне №1':     'Неврологія №1',
+  'Неврологічне №2':     'Неврологія №2',
+  'Ортопедія':           'Ортопедичне',
+  'Неврологічне №3':     'Неврологія №3',
+  'ВНМД':                'ВЕНМД',
+};
+function normDept(dept){ return DEPT_MAP[dept] || dept; }
+
 async function loadR(dateStr){
   $('rtb').innerHTML=`<tr class="lr"><td colspan="11"><span class="sp"></span></td></tr>`;
   const date=dateStr||$('rdate').value||iso();
@@ -946,13 +959,15 @@ async function loadR(dateStr){
   // Звіт — тільки активні пацієнти (без виписки) на дату звіту
   const active=all.filter(p=>{
     if(!p.admDate)return false;
-    if(p.dischargeDate)return false; // виписані не рахуються
+    if(p.dischargeDate)return false;
     return p.admDate<=date;
   });
   const byDept={};
   active.forEach(p=>{
-    if(!byDept[p.dept])byDept[p.dept]={dept:p.dept,total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0};
-    const d=byDept[p.dept];
+    const dept=normDept(p.dept||'');
+    if(!dept)return;
+    if(!byDept[dept])byDept[dept]={dept,total:0,laying:0,sitting:0,discharge:0,evac:0,lt15:0,gt15:0,svid:0,pol:0};
+    const d=byDept[dept];
     const ev=(p.evacCategory||'').toLowerCase();
     d.total++;
     if(ev.includes('лежач'))d.laying++;else d.sitting++;
@@ -995,9 +1010,9 @@ function renderR(d){
   }
   // Рахуємо по виду ураження
   const activeList=d.active||[];
-  const injured=activeList.filter(p=>(p.injType||'').toLowerCase()==='поранений').length;
-  const trauma=activeList.filter(p=>(p.injType||'').toLowerCase()==='травмований').length;
-  const sick=activeList.filter(p=>(p.injType||'').toLowerCase()==='хворий').length;
+  const injured=activeList.filter(p=>(p.injType||'').toLowerCase().includes('поранен')).length;
+  const trauma=activeList.filter(p=>(p.injType||'').toLowerCase().includes('травмован')).length;
+  const sick=activeList.filter(p=>(p.injType||'').toLowerCase().includes('хвор')).length;
   $('rStats').innerHTML=s?`
     <div class="sc b"><div class="sl">Всього</div><div class="sv">${s.total??'—'}</div></div>
     <div class="sc r"><div class="sl">Лежачих</div><div class="sv">${s.laying??'—'}</div></div>
