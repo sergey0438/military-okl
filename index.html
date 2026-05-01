@@ -382,7 +382,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
   <div class="md">
     <div class="mh"><div><div class="mt">Редагування</div><div class="ms" id="editName"></div></div><button class="mx" onclick="cm('editM')">✕</button></div>
     <div class="mb"><div class="fg">
-      <div class="fi s2"><label class="fl">ПІБ</label><input class="f" type="text" id="ep_pib" disabled><span style="font-size:11px;color:var(--t3)">ПІБ не редагується</span></div>
+      <div class="fi s2"><label class="fl">ПІБ</label><input class="f" type="text" id="ep_pib" id="ep_pib_field"><span style="font-size:11px;color:var(--t3)" id="ep_pib_note">ПІБ не редагується</span></div>
       <div class="fi"><label class="fl">Категорія</label><select class="f" id="ep_cat"><option>ЗСУ</option><option>НГУ</option><option>СБУ</option><option>Поліція</option><option>ДСНС</option><option>ДПСУ</option><option>Інші</option></select></div>
       <div class="fi s2"><label class="fl">Відділення</label>
         <select class="f" id="ep_dept"><option value="">Виберіть</option>
@@ -474,7 +474,7 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
     <div class="mh"><div><div class="mt">⚙️ Налаштування</div><div class="ms">Захищений розділ</div></div><button class="mx" onclick="cm('cfgModal')">✕</button></div>
     <div class="mb" style="display:flex;flex-direction:column;gap:20px">
       <div style="font-size:12px;color:var(--t3);padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b);margin-bottom:8px" id="lastLoginInfo">Останній вхід адміна: —</div>
-      <div style="font-size:12px;padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b)" id="lastLoginsInfo">Завантаження...</div>
+      <div style="font-size:12px;padding:10px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b)" id="lastLoginsInfo">Завантаження...</div>
       <div>
         <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔥 Firebase Cloud Functions</div>
         <div style="background:var(--gd);border:1px solid rgba(22,163,74,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--g)">✓ Захищений API — паролі тільки на сервері</div>
@@ -649,8 +649,11 @@ async function load(){
   try{
     const d=await api('GET','patients');
     all=d.patients||[];
+    // Якщо фільтр ще не встановлений — ставимо "На лікуванні" за замовчуванням
+    if(!$('fS').value) $('fS').value='a';
     render(all);stats(all);depts(all);
     $('cnt').textContent=all.filter(p=>!p.dischargeDate).length;
+    ft(); // застосовуємо фільтр
   }catch(e){
     tb.innerHTML=`<tr class="lr"><td colspan="12" style="color:var(--r)">⚠ ${e.message}</td></tr>`;
   }
@@ -662,7 +665,7 @@ function render(pts){
   tb.innerHTML=pts.map((p,i)=>{
     const days=bd(p.admDate,p.dischargeDate);
     const lbl=p.bedDaysLabel||(days<15?'<15':'>15');
-    const bdg=p.dischargeDate?`<span class="tag-x" style="font-family:var(--mono)">${days}</span>`:lbl==='<15'?`<span class="tag-g">✓ ${days}д</span>`:`<span class="tag-r">⚠ ${days}д</span>`;
+    const bdg=p.dischargeDate?`<span class="tag-x" style="font-family:var(--mono)">${days}</span>`:days<15?`<span class="tag-g">✓ ${days}д</span>`:`<span class="tag-r">⚠ ${days}д</span>`;
     const sb=p.dischargeDate?`<span class="tag-x">Виписаний</span>`:`<span class="tag-b">На лікуванні</span>`;
     const eb=p.evacCategory?`<span class="tag-y" style="font-size:10px">${esc(p.evacCategory)}</span>`:`<span style="color:var(--t3)">—</span>`;
     const svidBdg=p.svid==='Так'?`<span class="tag-g" style="font-size:10px">Так</span>`:`<span style="color:var(--t3);font-size:11px">—</span>`;
@@ -756,13 +759,15 @@ async function addP(){
   if(!inj){notify('Оберіть вид ураження','err');restore();return;}
   if(!state){notify('Оберіть стан','err');restore();return;}
   if(!adm){notify('Вкажіть дату госпіталізації','err');restore();return;}
+  const diag=$('fg2').value.trim();
+  if(!diag||diag.length<10){notify('Діагноз обов'язковий (мінімум 10 символів)','err');restore();return;}
 
   const dup=all.find(p=>!p.dischargeDate&&p.pib.trim().toLowerCase()===pib.toLowerCase());
   if(dup&&!confirm(`⚠️ Пацієнт "${pib}" вже є на лікуванні (${dup.dept}). Додати ще раз?`)){restore();return;}
 
   try{
-    await api('POST','patients',{pib,dept,admDate:adm,category:cat,diagnosis:$('fg2').value.trim(),state,injType:inj,evacCategory:evac,svid,pol});
-    cm('addM');notify('Пацієнта додано ✓','ok');load();
+    await api('POST','patients',{pib,dept,admDate:adm,category:cat,diagnosis:diag,state,injType:inj,evacCategory:evac,svid,pol});
+    cm('addM');notify('Пацієнта додано ✓','ok');load();if($('page-r').classList.contains('active'))loadR();
     restore();
   }catch(e){notify('Помилка: '+e.message,'err');restore();}
 }
@@ -773,6 +778,10 @@ function openEdit(id){
   _editId=id;
   $('editName').textContent=p.pib;
   $('ep_pib').value=p.pib;
+  // Адмін може редагувати ПІБ
+  $('ep_pib').disabled=(_role!=='admin');
+  const pibNote=$('ep_pib_note');
+  if(pibNote)pibNote.style.display=_role==='admin'?'none':'';
   $('ep_adm').value=p.admDate;
   $('ep_diag').value=p.diagnosis||'';
   const setVal=(elId,val)=>{const el=$(elId);if(!el)return;for(let o of el.options)if(o.value===val||o.text===val){el.value=o.value;break;}};
@@ -783,14 +792,17 @@ function openEdit(id){
 }
 async function saveEdit(){
   try{
-    await api('PATCH',`patients/${_editId}`,{
+    const editBody={
       dept:$('ep_dept').value,admDate:$('ep_adm').value,
       category:$('ep_cat').value,diagnosis:$('ep_diag').value,
       state:$('ep_state').value,injType:$('ep_inj').value,
       evacCategory:$('ep_evac').value,
       svid:$('ep_svid').value,pol:$('ep_pol').value,
-    });
-    cm('editM');notify('Зміни збережено ✓','ok');load();
+    };
+    // Адмін може змінити ПІБ
+    if(_role==='admin'&&$('ep_pib').value.trim()) editBody.pib=$('ep_pib').value.trim();
+    await api('PATCH',`patients/${_editId}`,editBody);
+    cm('editM');notify('Зміни збережено ✓','ok');load();if($('page-r').classList.contains('active'))loadR();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
 
@@ -810,7 +822,7 @@ async function confDis(){
   if(!date){notify('Вкажіть дату виписки','err');return;}
   try{
     await api('POST',`patients/${_disId}/discharge`,{dischargeDate:date});
-    cm('disM');notify('Виписку зафіксовано ✓','ok');load();
+    cm('disM');notify('Виписку зафіксовано ✓','ok');load();if($('page-r').classList.contains('active'))loadR();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
 
@@ -907,11 +919,12 @@ async function loadR(dateStr){
   $('rtb').innerHTML=`<tr class="lr"><td colspan="11"><span class="sp"></span></td></tr>`;
   const date=dateStr||$('rdate').value||iso();
   $('rdlbl').textContent='Зріз на: '+fd(date);
-  const deadline=new Date(date+'T09:00:00+03:00');
+  const deadline=new Date(date+'T08:00:00+03:00');
+  // Звіт — тільки активні пацієнти (без виписки) на дату звіту
   const active=all.filter(p=>{
     if(!p.admDate)return false;
-    const dis=p.dischargeDate||'9999-12-31';
-    return p.admDate<=date&&dis>=date;
+    if(p.dischargeDate)return false; // виписані не рахуються
+    return p.admDate<=date;
   });
   const byDept={};
   active.forEach(p=>{
@@ -955,13 +968,20 @@ function renderR(d){
     const canEdit=_role==='admin'||(date===iso()&&new Date().getHours()<9)||date===tmrw.toISOString().slice(0,10);
     manualBtn.disabled=!canEdit;manualBtn.style.opacity=canEdit?'1':'0.4';
   }
+  // Рахуємо по виду ураження
+  const injured=active.filter(p=>(p.injType||'').toLowerCase()==='поранений').length;
+  const trauma=active.filter(p=>(p.injType||'').toLowerCase()==='травмований').length;
+  const sick=active.filter(p=>(p.injType||'').toLowerCase()==='хворий').length;
   $('rStats').innerHTML=s?`
     <div class="sc b"><div class="sl">Всього</div><div class="sv">${s.total??'—'}</div></div>
     <div class="sc r"><div class="sl">Лежачих</div><div class="sv">${s.laying??'—'}</div></div>
     <div class="sc g"><div class="sl">Сидячих</div><div class="sv">${s.sitting??'—'}</div></div>
     <div class="sc y"><div class="sl">Виписка</div><div class="sv">${s.discharge??'—'}</div></div>
     <div class="sc g"><div class="sl">&lt;15 днів</div><div class="sv">${s.lt15??'—'}</div></div>
-    <div class="sc r"><div class="sl">&gt;15 днів</div><div class="sv">${s.gt15??'—'}</div></div>`:'';
+    <div class="sc r"><div class="sl">&gt;15 днів</div><div class="sv">${s.gt15??'—'}</div></div>
+    <div class="sc r"><div class="sl">Поранені</div><div class="sv">${injured}</div></div>
+    <div class="sc y"><div class="sl">Травмовані</div><div class="sv">${trauma}</div></div>
+    <div class="sc g"><div class="sl">Хворі</div><div class="sv">${sick}</div></div>`:'';
   const tb=$('rtb');
   const n=v=>(v===null||v===undefined||v==='')?'—':v;
   let html=s?`<tr class="tr-total"><td>📊 Разом</td><td>${n(s.total)}</td><td>${n(s.laying)}</td><td>${n(s.sitting)}</td><td>${n(s.discharge)}</td><td>${n(s.evac)}</td><td>${n(s.freeBeds)||'—'}</td><td><span class="tag-g">${n(s.lt15)}</span></td><td><span class="tag-r">${n(s.gt15)}</span></td><td>${n(s.svid)||'—'}</td><td>${n(s.pol)||'—'}</td></tr>`:'';
@@ -1000,16 +1020,35 @@ async function saveManual(){
 }
 
 async function loadLastLogins(){
+  // Показуємо свій вхід адміна одразу
+  const adminLoginEl=$('lastLoginInfo');
+  if(adminLoginEl){
+    const myLogin=localStorage.getItem('okl_last_login')||'невідомо';
+    adminLoginEl.innerHTML=`<span style="color:var(--t2)">🔐 Ваш вхід:</span> ${esc(myLogin)}`;
+  }
+  // Завантажуємо всі входи лікарів
+  const el=$('lastLoginsInfo');
+  if(!el)return;
+  el.innerHTML='<span style="color:var(--t3)">Завантаження...</span>';
   try{
     const d=await api('GET','lastlogins');
-    const data=d.data||{};
-    const el=$('lastLoginsInfo');
-    if(!el)return;
-    const doctor=data.doctor;
-    el.innerHTML=doctor
-      ?`<span style="color:var(--t2)">Останній вхід лікаря:</span> <strong>${esc(doctor.surname)}</strong> — ${esc(doctor.time)}`
-      :'Входів лікарів ще не було';
-  }catch(e){}
+    const logins=d.allDoctorLogins||[];
+    if(!logins.length){
+      el.innerHTML='<span style="color:var(--t3)">👨‍⚕️ Лікарі ще не входили</span>';
+      return;
+    }
+    el.innerHTML=`
+      <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">👨‍⚕️ Журнал входів лікарів (останні 50):</div>
+      <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+        ${logins.map(l=>`
+          <div style="display:flex;justify-content:space-between;padding:5px 10px;background:var(--bg);border-radius:6px;font-size:12px">
+            <span style="font-weight:600;color:var(--t)">${esc(l.surname||'невідомо')}</span>
+            <span style="color:var(--t3);font-family:var(--mono)">${esc(l.time||'')}</span>
+          </div>`).join('')}
+      </div>`;
+  }catch(e){
+    el.innerHTML='<span style="color:var(--r)">Помилка завантаження</span>';
+  }
 }
 
 function exportR(){
@@ -1035,7 +1074,7 @@ async function unlockCfg(){
   try{
     await api('POST','login',{role:'dev',password:pw});
     cm('cfgPwModal');
-    $('lastLoginInfo').textContent='Останній вхід: '+(localStorage.getItem('okl_last_login')||'невідомо');
+    loadLastLogins();
     $('cfgModal').classList.add('open');
     if(btn){btn.disabled=false;btn.textContent='Увійти';}
   }catch(e){
