@@ -224,6 +224,10 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
     <div class="sc b"><div class="sl">Свідоцтв</div><div class="sv" id="sSvid">—</div></div>
   </div>
   <div id="catStats" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px"></div>
+  <div id="dischargeStats" style="margin-bottom:16px;display:none;flex-wrap:wrap;gap:8px;padding:12px;background:var(--s);border:1px solid var(--b);border-radius:10px;box-shadow:var(--shadow)">
+    <div style="width:100%;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📊 Статистика виписок</div>
+    <div id="dischargeStatsInner" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  </div>
   <div class="tb">
     <div class="sw">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/></svg>
@@ -416,7 +420,24 @@ input.f:disabled,select.f:disabled{opacity:.5;cursor:not-allowed;background:var(
 <div class="mo" id="disM">
   <div class="md">
     <div class="mh"><div><div class="mt">Виписка пацієнта</div><div class="ms" id="disN"></div></div><button class="mx" onclick="cm('disM')">✕</button></div>
-    <div class="mb"><div class="di" id="disI"></div><div class="fi"><label class="fl">Дата виписки *</label><input class="f" type="date" id="disD"></div></div>
+    <div class="mb">
+      <div class="di" id="disI"></div>
+      <div class="fi" style="margin-bottom:14px">
+        <label class="fl">Тип виписки *</label>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          <label class="radio-opt"><input type="radio" name="dis_type" value="Виписаний" checked> 🏠 Виписаний додому</label>
+          <label class="radio-opt"><input type="radio" name="dis_type" value="Відпустка"> 🌿 Відпустка</label>
+          <label class="radio-opt"><input type="radio" name="dis_type" value="До частини"> 🪖 До частини</label>
+          <label class="radio-opt"><input type="radio" name="dis_type" value="Евакуйований"> 🚑 Евакуйований</label>
+          <label class="radio-opt"><input type="radio" name="dis_type" value="Помер" id="disTypeDead"> ✝️ Помер</label>
+        </div>
+      </div>
+      <div class="fi"><label class="fl">Дата виписки *</label><input class="f" type="date" id="disD"></div>
+      <div class="fi" id="deathTimeGroup" style="display:none">
+        <label class="fl">Час смерті</label>
+        <input class="f" type="time" id="disDeathTime" placeholder="00:00">
+      </div>
+    </div>
     <div class="mf"><button class="btn bg2" onclick="cm('disM')">Скасувати</button><button class="btn bsuc" onclick="confDis()">✓ Підтвердити</button></div>
   </div>
 </div>
@@ -552,6 +573,14 @@ function notify(msg,type){
   clearTimeout(_nt);_nt=setTimeout(()=>el.classList.remove('show'),4000);
 }
 function cm(id){ $(id).classList.remove('open'); }
+
+// Тип виписки — показуємо час смерті якщо "Помер"
+document.addEventListener('change', e => {
+  if(e.target.name==='dis_type'){
+    const deathGroup=$('deathTimeGroup');
+    if(deathGroup) deathGroup.style.display=e.target.value==='Помер'?'':'none';
+  }
+});
 document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 
 // ══ АВТОРИЗАЦІЯ ══
@@ -682,7 +711,12 @@ function render(pts){
     const days=bd(p.admDate,p.dischargeDate);
     const lbl=p.bedDaysLabel||(days<15?'<15':'>15');
     const bdg=p.dischargeDate?`<span class="tag-x" style="font-family:var(--mono)">${days}</span>`:days<15?`<span class="tag-g">✓ ${days}д</span>`:`<span class="tag-r">⚠ ${days}д</span>`;
-    const sb=p.dischargeDate?`<span class="tag-x">Виписаний</span>`:`<span class="tag-b">На лікуванні</span>`;
+    const disTypeColors={'Виписаний':'var(--g)','Відпустка':'var(--bl)','До частини':'var(--y)','Евакуйований':'#e67e22','Помер':'var(--r)'};
+    const disTypeIcons={'Виписаний':'🏠','Відпустка':'🌿','До частини':'🪖','Евакуйований':'🚑','Помер':'✝️'};
+    const dType=p.dischargeType||'Виписаний';
+    const sb=p.dischargeDate
+      ?`<span style="background:rgba(0,0,0,.05);border:1px solid var(--b);padding:2px 8px;border-radius:20px;font-size:11px;color:${disTypeColors[dType]||'var(--t2)'}">${disTypeIcons[dType]||''} ${dType}</span>`
+      :`<span class="tag-b">На лікуванні</span>`;
     const eb=p.evacCategory?`<span class="tag-y" style="font-size:10px">${esc(p.evacCategory)}</span>`:`<span style="color:var(--t3)">—</span>`;
     const svidBdg=p.svid==='Так'?`<span class="tag-g" style="font-size:10px">Так</span>`:`<span style="color:var(--t3);font-size:11px">—</span>`;
     const polBdg=p.pol==='Так'?`<span class="tag-y" style="font-size:10px">Так</span>`:`<span style="color:var(--t3);font-size:11px">—</span>`;
@@ -715,6 +749,42 @@ function stats(pts){
   $('sG').textContent=a.filter(p=>bd(p.admDate)>=15).length;
   $('sD').textContent=pts.filter(p=>p.dischargeDate?.slice(0,10)===t).length;
   $('sSvid').textContent=a.filter(p=>p.svid==='Так').length;
+
+  // Статистика виписок
+  const discharged=pts.filter(p=>p.dischargeDate);
+  const disEl=$('dischargeStats');
+  const disInner=$('dischargeStatsInner');
+  if(discharged.length>0&&disEl&&disInner){
+    disEl.style.display='flex';
+    const types={
+      'Виписаний':'🏠',
+      'Відпустка':'🌿',
+      'До частини':'🪖',
+      'Евакуйований':'🚑',
+      'Помер':'✝️',
+    };
+    const counts={};
+    discharged.forEach(p=>{
+      const t2=p.dischargeType||'Виписаний';
+      counts[t2]=(counts[t2]||0)+1;
+    });
+    const colors={'Виписаний':'var(--g)','Відпустка':'var(--bl)','До частини':'var(--y)','Евакуйований':'#e67e22','Помер':'var(--r)'};
+    disInner.innerHTML=Object.entries(types)
+      .filter(([t2])=>counts[t2])
+      .map(([t2,icon])=>`
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--s2);border:1px solid var(--b);border-radius:8px">
+          <span style="font-size:14px">${icon}</span>
+          <span style="font-size:12px;color:var(--t2)">${t2}</span>
+          <span style="font-size:16px;font-weight:700;color:${colors[t2]||'var(--t)'};font-family:var(--mono)">${counts[t2]}</span>
+        </div>`).join('');
+    // Загальна кількість виписаних
+    disInner.innerHTML=`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--s2);border:1px solid var(--b);border-radius:8px">
+      <span style="font-size:12px;color:var(--t2)">Всього виписано</span>
+      <span style="font-size:16px;font-weight:700;color:var(--t);font-family:var(--mono)">${discharged.length}</span>
+    </div>`+disInner.innerHTML;
+  } else if(disEl){
+    disEl.style.display='none';
+  }
   const cats={};
   a.forEach(p=>{const c=p.category||'Інші';cats[c]=(cats[c]||0)+1;});
   const colors={'ЗСУ':'var(--bl)','НГУ':'var(--g)','СБУ':'var(--y)','ДСНС':'#e67e22','Поліція':'#9b59b6','ДПСУ':'#1abc9c','Інші':'var(--t3)'};
@@ -839,8 +909,14 @@ function openDis(id,pib,adm,days,lbl){
 async function confDis(){
   const date=$('disD').value;
   if(!date){notify('Вкажіть дату виписки','err');return;}
+  const disType=document.querySelector('input[name="dis_type"]:checked')?.value||'Виписаний';
+  const deathTime=disType==='Помер'?($('disDeathTime')?.value||''):'';
   try{
-    await api('POST',`patients/${_disId}/discharge`,{dischargeDate:date});
+    await api('POST',`patients/${_disId}/discharge`,{
+      dischargeDate:date,
+      dischargeType:disType,
+      deathTime:deathTime,
+    });
     cm('disM');notify('Виписку зафіксовано ✓','ok');load();if($('page-r').classList.contains('active'))loadR();
   }catch(e){notify('Помилка: '+e.message,'err');}
 }
@@ -961,26 +1037,46 @@ async function loadR(dateStr){
   const deadline=new Date(date+'T08:00:00+03:00');
   // Звіт — тільки активні пацієнти (без виписки) на дату звіту
   // Після 08:00 — пацієнти додані сьогодні після 08:00 НЕ потрапляють в звіт
-  // Поточний київський час
-  const kyivNowStr=new Date().toLocaleString('uk-UA',{timeZone:'Europe/Kiev',hour:'2-digit',minute:'2-digit',hour12:false});
-  const [kyivH,kyivM]=kyivNowStr.split(':').map(Number);
-  const kyivMinutes=kyivH*60+kyivM;
-  const deadlineMinutes=9*60; // 09:00
+  // Дедлайн: 09:00 вибраної дати
+  // Пацієнт в звіті якщо:
+  // 1. admDate <= дата звіту
+  // 2. доданий до 09:00 вибраної дати (якщо admDate === дата звіту)
+  // 3. не виписаний АБО виписаний після 09:00 вибраної дати
+  const DEADLINE_MIN = 9 * 60; // 09:00
 
-  const active=all.filter(p=>{
-    if(!p.admDate)return false;
-    if(p.dischargeDate)return false;
-    if(p.admDate>date)return false;
-    // Пацієнти додані сьогодні після 08:00 — не в звіті поточного дня
-    if(p.admDate===date && p.createdAt && kyivMinutes>=deadlineMinutes){
-      try{
-        // createdAt: "01.05.2026, 12:43:20" -> парсимо вручну
-        const m=p.createdAt.match(/(\d+)\.(\d+)\.(\d+),\s*(\d+):(\d+)/);
-        if(m){
-          const createdMinutes=parseInt(m[4])*60+parseInt(m[5]);
-          if(createdMinutes>=deadlineMinutes)return false;
-        }
-      }catch(e){}
+  function parseCreatedMinutes(createdAt) {
+    if(!createdAt) return null;
+    const m = createdAt.match(/(\d+)\.(\d+)\.(\d+),\s*(\d+):(\d+)/);
+    if(!m) return null;
+    return parseInt(m[4]) * 60 + parseInt(m[5]);
+  }
+
+  function parseDischargeMinutes(dischargeTime) {
+    if(!dischargeTime) return null;
+    const m = dischargeTime.match(/(\d+):(\d+)/);
+    if(!m) return null;
+    return parseInt(m[1]) * 60 + parseInt(m[2]);
+  }
+
+  const active = all.filter(p => {
+    if(!p.admDate) return false;
+    if(p.admDate > date) return false;
+
+    // Пацієнт доданий в день звіту — перевіряємо час додавання
+    if(p.admDate === date && p.createdAt) {
+      const createdMin = parseCreatedMinutes(p.createdAt);
+      if(createdMin !== null && createdMin >= DEADLINE_MIN) return false;
+    }
+
+    // Виписані: не включаємо тільки якщо виписані ДО 09:00 в день звіту
+    if(p.dischargeDate) {
+      if(p.dischargeDate < date) return false; // виписаний до дати звіту
+      if(p.dischargeDate === date) {
+        // Виписаний в день звіту — якщо до 09:00 не рахуємо, після 09:00 рахуємо
+        const disMin = parseDischargeMinutes(p.dischargedAt||'');
+        if(disMin !== null && disMin < DEADLINE_MIN) return false;
+        // Якщо час невідомий — включаємо (на користь пацієнта)
+      }
     }
     return true;
   });
