@@ -574,6 +574,20 @@ function notify(msg,type){
 }
 function cm(id){ $(id).classList.remove('open'); }
 
+function openDisById(id){
+  const p=all.find(x=>x.id===id);
+  if(!p)return;
+  const days=bd(p.admDate,null);
+  const lbl=p.bedDaysLabel||(days<15?'<15':'>15');
+  openDis(p.id,p.pib,p.admDate,days,lbl);
+}
+
+function openDelById(id){
+  const p=all.find(x=>x.id===id);
+  if(!p)return;
+  openDel(p.id,p.pib);
+}
+
 // Тип виписки — показуємо час смерті якщо "Помер"
 document.addEventListener('change', e => {
   if(e.target.name==='dis_type'){
