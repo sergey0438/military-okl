@@ -722,9 +722,9 @@ function render(pts){
     const polBdg=p.pol==='Так'?`<span class="tag-y" style="font-size:10px">Так</span>`:`<span style="color:var(--t3);font-size:11px">—</span>`;
     let actions=p.dischargeDate
       ?`<span class="dlbl">${fd(p.dischargeDate)}</span> `
-      :`<button class="dbtn" onclick="openDis('${p.id}','${esc(p.pib)}','${p.admDate}',${days},'${lbl}')">Виписати</button> `;
+      :`<button class="dbtn" onclick="openDisById('${p.id}')">Виписати</button> `;
     actions+=`<button class="edit-btn" onclick="openEdit('${p.id}')">✏️</button>`;
-    if(_role==='admin') actions+=` <button class="del-btn" onclick="openDel('${p.id}','${esc(p.pib)}')">🗑</button>`;
+    if(_role==='admin') actions+=` <button class="del-btn" onclick="openDelById('${p.id}')">🗑</button>`;
     return`<tr>
       <td style="font-family:var(--mono);color:var(--t3)">${i+1}</td>
       <td>
